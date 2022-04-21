@@ -1,0 +1,86 @@
+ARG BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+FROM ${BASE_IMAGE} as base
+
+ENV http_proxy "http://webproxy.berlin.ptb.de:8080"
+ENV https_proxy "http://webproxy.berlin.ptb.de:8080"
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+COPY raw-ubuntu.sh .
+RUN bash raw-ubuntu.sh
+RUN rm raw-ubuntu.sh
+
+# Set locale, suppress warnings
+ENV LANG en_GB.UTF-8
+ENV LANGUAGE en_GB:en
+
+user root
+COPY build_essential-ubuntu.sh .
+RUN bash build_essential-ubuntu.sh
+RUN rm build_essential-ubuntu.sh
+
+# Python (build)
+COPY build_python-ubuntu.sh .
+RUN bash build_python-ubuntu.sh
+RUN rm build_python-ubuntu.sh
+
+# Gadgetron
+COPY build_gadgetron-ubuntu.sh .
+RUN bash build_gadgetron-ubuntu.sh
+RUN rm build_gadgetron-ubuntu.sh
+
+# SIRF external deps
+COPY build_system-ubuntu.sh .
+RUN bash build_system-ubuntu.sh
+RUN rm build_system-ubuntu.sh
+
+
+RUN apt-get install wget
+RUN wget https://cmake.org/files/v3.16/cmake-3.16.7-Linux-x86_64.tar.gz
+RUN tar zxvf cmake-3.16.7-Linux-x86_64.tar.gz
+RUN mv cmake-3.16.7-Linux-x86_64     /opt/cmake-3.16.7
+RUN ln -sf  /opt/cmake-3.16.7/bin/*    /usr/bin/
+
+RUN ccache -o cache_dir=/opt/ccache
+COPY user_sirf-ubuntu.sh .
+
+# SIRF-SuperBuild version
+ARG SIRF_SB_URL="https://github.com/SyneRBI/SIRF-SuperBuild"
+ARG SIRF_SB_TAG="master"
+# speeding up the cmake build
+# (implementation note: changing this in your environment will invalidate the docker cache sadly)
+ARG NUM_PARALLEL_BUILDS="2"
+
+ARG BUILD_FLAGS="\
+ -DCMAKE_BUILD_TYPE=Release\
+ -DSTIR_ENABLE_OPENMP=ON -DUSE_SYSTEM_ACE=ON\
+ -DUSE_SYSTEM_Armadillo=ON -DUSE_SYSTEM_Boost=ON\
+ -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DUSE_ITK=ON\
+ -DGadgetron_USE_CUDA=OFF\
+ -DUSE_SYSTEM_SWIG=ON\
+ -DUSE_NiftyPET=OFF\
+ -DBUILD_siemens_to_ismrmrd=OFF -DBUILD_pet_rd_tools=OFF"
+ARG EXTRA_BUILD_FLAGS="-DBUILD_CIL=OFF"
+RUN bash user_sirf-ubuntu.sh
+RUN rm user_sirf-ubuntu.sh
+
+# Set environment variables for SIRF
+ENV PATH "/opt/conda/bin:/opt/SIRF-SuperBuild/INSTALL/bin:$PATH"
+ENV LD_LIBRARY_PATH "/opt/SIRF-SuperBuild/INSTALL/lib:/opt/SIRF-SuperBuild/INSTALL/lib64:/opt/conda/lib/:$LD_LIBRARY_PATH"
+ENV PYTHONPATH "/opt/SIRF-SuperBuild/INSTALL/python"
+ENV SIRF_INSTALL_PATH "/opt/SIRF-SuperBuild/INSTALL"
+ENV SIRF_PATH "/opt/SIRF-SuperBuild/sources/SIRF"
+RUN echo $PATH
+
+COPY /xnat/requirements.txt .
+
+RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
+RUN python3 get-pip.py
+RUN python3 -m pip install --no-cache-dir -r requirements.txt
+
+
+COPY /xnat/mr_sirf_qc_direct_recon.py .
+
+LABEL org.nrg.commands="[{\"name\": \"sirf_qc\", \"description\": \"Runs mr_sirf_qc_direct_recon\", \"label\": \"sirf_qc_v1\", \"version\": \"0.1\", \"schema-version\": \"1.0\", \"type\": \"docker\", \"image\": \"ckolbptb/sirf_qc\", \"command-line\": \"/bin/bash -c 'gadgetron & python3 mr_sirf_qc_direct_recon.py /input /output'\", \"mounts\": [{\"name\": \"raw-in\", \"writable\": \"false\", \"path\": \"/input\"}, {\"name\": \"dcm-out\", \"writable\": \"true\", \"path\": \"/output\"}], \"inputs\": [{\"name\": \"other-options\", \"description\": \"Other command-line flags to pass to qc_dicom_nii\", \"type\": \"string\", \"required\": false, \"replacement-key\": \"[OTHER_OPTIONS]\"}], \"outputs\": [{\"name\": \"dicom\", \"description\": \"Reconstructed dcm files\", \"mount\": \"dcm-out\", \"required\": \"true\"}], \"xnat\": [{\"name\": \"sirf_qc\", \"description\": \"Run QC on MR raw data\", \"label\": \"sirf_qc_mr\", \"contexts\": [\"xnat:imageScanData\"], \"external-inputs\": [{\"name\": \"scan\", \"description\": \"Input scan\", \"type\": \"Scan\", \"required\": true, \"matcher\": \"'MR_RAW' in @.resources[*].label\"}], \"derived-inputs\": [{\"name\": \"scan-raw\", \"description\": \"The raw resource on the scan\", \"type\": \"Resource\", \"derived-from-wrapper-input\": \"scan\", \"provides-files-for-command-mount\": \"raw-in\", \"matcher\": \"@.label == 'MR_RAW'\"}], \"output-handlers\": [{\"name\": \"dcm-resource\", \"accepts-command-output\": \"dicom\", \"as-a-child-of-wrapper-input\": \"scan\", \"type\": \"Resource\", \"label\": \"DICOM\"}]}]}]"
+
+
