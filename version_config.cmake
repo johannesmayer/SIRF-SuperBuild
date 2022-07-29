@@ -197,7 +197,7 @@ if (DEVEL_BUILD)
   set(DEFAULT_CCPi-Regularisation-Toolkit_TAG origin/master)
 
 else()
-  set(DEFAULT_SIRF_TAG v3.2.0)
+  set(DEFAULT_SIRF_TAG origin/qfix-dcm-attributes)
 
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
