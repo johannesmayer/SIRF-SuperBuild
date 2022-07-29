@@ -62,7 +62,7 @@ ARG BUILD_FLAGS="\
  -DBUILD_siemens_to_ismrmrd=OFF\
  -DBUILD_pet_rd_tools=OFF\
  -DBUILD_Gadgetron=OFF\
- -DBUILD_STIR=OFF"
+ -DBUILD_NIFTYREG=OFF"
 ARG EXTRA_BUILD_FLAGS="-DBUILD_CIL=OFF"
 RUN bash user_sirf-ubuntu.sh
 RUN rm user_sirf-ubuntu.sh
