@@ -17,4 +17,4 @@ gadgetron_ismrmrd_client --filename=$fname_in --outfile=" " --config-local=$fnam
 find -type f -name "*_attrib.xml" -delete
 
 #
-python3 gtpipelines/postprocess_dcm.py -i=$dir_of_recon -o=${fdir_out}
+python3 /recon/postprocess_dcm.py -i=$dir_of_recon -o=${fdir_out}
