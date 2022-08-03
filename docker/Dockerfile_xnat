@@ -79,8 +79,8 @@ RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
 RUN python3 get-pip.py
 RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
-
-COPY /xnat/mr_sirf_qc_direct_recon.py .
+ADD /xnat/recon .
+RUN chmod 777 /recon
 
 LABEL org.nrg.commands="[{\"name\": \"sirf_qc\", \"description\": \"Runs mr_sirf_qc_direct_recon\", \"label\": \"sirf_qc_v1\", \"version\": \"0.1\", \"schema-version\": \"1.0\", \"type\": \"docker\", \"image\": \"ckolbptb/sirf_qc\", \"command-line\": \"/bin/bash -c 'gadgetron & python3 mr_sirf_qc_direct_recon.py /input /output'\", \"mounts\": [{\"name\": \"raw-in\", \"writable\": \"false\", \"path\": \"/input\"}, {\"name\": \"dcm-out\", \"writable\": \"true\", \"path\": \"/output\"}], \"inputs\": [{\"name\": \"other-options\", \"description\": \"Other command-line flags to pass to qc_dicom_nii\", \"type\": \"string\", \"required\": false, \"replacement-key\": \"[OTHER_OPTIONS]\"}], \"outputs\": [{\"name\": \"dicom\", \"description\": \"Reconstructed dcm files\", \"mount\": \"dcm-out\", \"required\": \"true\"}], \"xnat\": [{\"name\": \"sirf_qc\", \"description\": \"Run QC on MR raw data\", \"label\": \"sirf_qc_mr\", \"contexts\": [\"xnat:imageScanData\"], \"external-inputs\": [{\"name\": \"scan\", \"description\": \"Input scan\", \"type\": \"Scan\", \"required\": true, \"matcher\": \"'MR_RAW' in @.resources[*].label\"}], \"derived-inputs\": [{\"name\": \"scan-raw\", \"description\": \"The raw resource on the scan\", \"type\": \"Resource\", \"derived-from-wrapper-input\": \"scan\", \"provides-files-for-command-mount\": \"raw-in\", \"matcher\": \"@.label == 'MR_RAW'\"}], \"output-handlers\": [{\"name\": \"dcm-resource\", \"accepts-command-output\": \"dicom\", \"as-a-child-of-wrapper-input\": \"scan\", \"type\": \"Resource\", \"label\": \"DICOM\"}]}]}]"
 
