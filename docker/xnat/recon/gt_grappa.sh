@@ -4,7 +4,7 @@ echo "Running GRAPPA reconstruction using Gadgetron."
 
 fname_in=$1
 fdir_out=$2
-fname_config="./gtpipelines/Generic_Cartesian_Grappa.xml"
+fname_config="/recon/gtpipelines/Generic_Cartesian_Grappa.xml"
 
 echo "Input file is ${fname_in} and output directory is ${fdir_out}"
 echo "Stream configuration is ${fname_config}}"
