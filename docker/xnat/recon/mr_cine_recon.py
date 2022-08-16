@@ -12,11 +12,12 @@ def main(path_in, fpath_output_prefix):
     assert os.access(path_in, os.R_OK), f"You don't have write permission in {path_in}"
     assert os.access(fpath_output_prefix, os.W_OK), f"You don't have write permission in {fpath_output_prefix}"
 
+    temp_path_output = Path('/home/')
+
     list_of_files = sorted(path_in.glob("*.h5"))
 
     for mrfile in list_of_files:
-
-        fname_processed_output = fpath_output_prefix / f"temp_preprocessed_{mrfile.name}"
+        fname_processed_output = temp_path_output / f"temp_preprocessed_{mrfile.name}"
         prep_success = sirf_preprocessing.preprocess(str(mrfile), str(fname_processed_output))
 
         recon_path_out = fpath_output_prefix / str(fname_processed_output.stem).replace('temp_preprocessed_', 'recon_')
