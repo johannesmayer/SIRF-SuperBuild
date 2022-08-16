@@ -1,12 +1,12 @@
 {
     "name": "sirf_qc",
-    "description": "Runs mr_sirf_qc_direct_recon",
+    "description": "Runs mr_cine_recon",
     "label": "sirf_qc_v1",
     "version": "0.1",
     "schema-version": "1.0",
     "type": "docker",
-    "image": "ckolbptb/sirf_qc",
-    "command-line": "/bin/bash -c 'gadgetron & python3 mr_sirf_qc_direct_recon.py /input /output'",
+    "image": "johannesmayer/sirf_qc",
+    "command-line": "/bin/bash -c 'gadgetron & python3 /recon/mr_cine_recon.py /input /output'",
     "mounts": [
         {
             "name": "raw-in",
