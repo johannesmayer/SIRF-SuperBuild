@@ -20,10 +20,8 @@ def main(path_in, fpath_output_prefix):
         fname_processed_output = temp_path_output / f"temp_preprocessed_{mrfile.name}"
         prep_success = sirf_preprocessing.preprocess(str(mrfile), str(fname_processed_output))
 
-        recon_path_out = fpath_output_prefix / str(fname_processed_output.stem).replace('temp_preprocessed_', 'recon_')
-
         if prep_success:
-            cmd_recon = f"/bin/bash /recon/gt_grappa.sh {fname_processed_output} {recon_path_out}"
+            cmd_recon = f"/bin/bash /recon/gt_grappa.sh {fname_processed_output} {fpath_output_prefix}"
             print(f"Running command: {cmd_recon}")
             sys_return = os.system(cmd_recon)
             os.remove(str(fname_processed_output))
@@ -40,7 +38,5 @@ def main(path_in, fpath_output_prefix):
 path_in  = Path(sys.argv[1])
 path_out = Path(sys.argv[2])
 
-try:
-    main(path_in, path_out)
-except Exception as e:
-    print(f"Program failed because of {str(e)}")
+main(path_in, path_out)
+

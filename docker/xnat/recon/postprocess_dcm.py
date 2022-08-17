@@ -14,7 +14,7 @@ args = parser.parse_args()
 dir_in = Path(args.input)
 dir_out = Path(args.output)
 
-assert not dir_out.is_dir(), "You gave an output directory that already exists. That's too dangerous, hence the program is stopped."
+assert dir_out.is_dir(), "You gave an output directory that does not exists. The program is stopped."
 
 def extract_dcm_number_from_gt_recon(fname_dcm):
     num_digits = 6
@@ -25,16 +25,15 @@ def main(input_dir, output_dir):
     print(f"--- Postprocessing gadgetron reconstruction: Searching for dicoms in {input_dir} and moving them to {output_dir}")
 
     flist_dcm=sorted(input_dir.glob("*.dcm"))
-    output_dir.mkdir(parents=True, exist_ok=True)
 
     num_recon_phases = 30
     all_imgs = len(flist_dcm)
     first_img_num = all_imgs - num_recon_phases 
     for fdcm in flist_dcm:
-        
+
         recon_number = extract_dcm_number_from_gt_recon(fdcm)
         target = Path(fdcm.parent / f"gt_recon_{recon_number}.dcm")
-        
+
         if int(recon_number) >= first_img_num:
             fdcm.rename(target)
             shutil.move(str(target), str(output_dir))
