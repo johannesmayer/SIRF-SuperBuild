@@ -4,24 +4,6 @@ import os
 from collections import Counter
 import sirf.Gadgetron as pMR
 
-
-def main(path_in, path_out):
-
-    print(f"Reading from {path_in}, writing into {path_out}")
-    assert os.access(path_in, os.R_OK), f"You don't have write permission in {path_in}"
-    assert os.access(path_out, os.W_OK), f"You don't have write permission in {path_out}"
-
-    list_of_files = sorted(path_in.glob("*.h5"))
-
-    for mrfile in list_of_files:
-
-        cname_out = path_out / f"preprocessed_{mrfile.name}"
-        preprocess(str(mrfile),str(cname_out))
-
-    print('preprocessing finished')
-
-    return 0
-
 def preprocess(fname_in,fname_out):
     
     rd = pMR.AcquisitionData(fname_in)
