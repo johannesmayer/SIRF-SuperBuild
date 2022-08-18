@@ -74,7 +74,7 @@ def postprocess_dcm(input_dir, output_dir):
             os.remove(str(fdcm))
 
 def determine_num_interpolated_phases(fpath_gt_pipeline_xml):
-    return int(get_gadget_property_from_xml(fpath_gt_pipeline_xml, 'PhisioInterp', 'phases'))
+    return int(get_gadget_property_from_xml(fpath_gt_pipeline_xml, 'PhysioInterpolation', 'phases'))
 
 def extract_dcm_number_from_gt_recon(fname_dcm):
     num_digits = 6
