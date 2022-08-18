@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 import sirf_preprocessing
 
-
+from gadgetron_xml_parsing import get_gadget_property_from_xml
 
 path_recon_execution = Path('/')
 path_temp_files = Path('/home/')
@@ -18,8 +18,9 @@ def main(path_in, fpath_output_prefix):
 
     list_rawdata = sorted(path_in.glob("*.h5"))
 
-    for f in list_rawdata:
-        prep_and_recon(f, path_temp_files)
+    for fname_raw in list_rawdata:
+        fname_preprocessed = preprocess_rawdata(fname_raw, path_temp_files)
+        recon(fname_preprocessed, fname_config)
         clean_up_reconfiles(path_recon_execution)
         postprocess_dcm(path_recon_execution, fpath_output_prefix)
 
@@ -27,23 +28,25 @@ def main(path_in, fpath_output_prefix):
 
     return 0
 
-def prep_and_recon(f, path_temp):
-
-    fname_processed_output = path_temp / f"temp_preprocessed_{f.name}"
-    prep_success = sirf_preprocessing.preprocess(str(f), str(fname_processed_output))
+def preprocess_rawdata(fname_rawdata, fpath_output):
+    prefix_string = "temp_preprocessed"
+    fname_processed_output = fpath_output / f"{prefix_string}_{fname_rawdata.name}"
+    prep_success = sirf_preprocessing.preprocess(str(fname_rawdata), str(fname_processed_output))
 
     if prep_success:
-        cmd_recon = f"gadgetron_ismrmrd_client --filename={fname_processed_output} --outfile=' ' --config-local={fname_config}"
-
-        print(f"Running command: {cmd_recon}")
-        sys_return = os.system(cmd_recon)
-        os.remove(str(fname_processed_output))
-
-        if sys_return != 0:
-            raise AssertionError("The reconstruction step failed. Aborting reconstructions.")
-
+        return fname_processed_output
     else:
         raise AssertionError("The preprocessing step failed. Aborting reconstructions.")
+
+def recon(fname_rawdata, fname_config):
+    cmd_recon = f"gadgetron_ismrmrd_client --filename={fname_rawdata} --outfile=' ' --config-local={fname_config}"
+
+    print(f"Running command: {cmd_recon}")
+    sys_return = os.system(cmd_recon)
+    os.remove(str(fname_rawdata))
+
+    if sys_return != 0:
+        raise AssertionError("The reconstruction step failed. Aborting reconstructions.")
 
 def clean_up_reconfiles(recon_path):
     flist_garbage=sorted(recon_path.glob("*_attrib.xml"))
@@ -56,7 +59,7 @@ def postprocess_dcm(input_dir, output_dir):
 
     flist_dcm=sorted(input_dir.glob("*.dcm"))
 
-    num_recon_phases = 30
+    num_recon_phases = determine_num_interpolated_phases(fname_config)
     all_imgs = len(flist_dcm)
     first_img_num = all_imgs - num_recon_phases 
     for fdcm in flist_dcm:
@@ -69,7 +72,10 @@ def postprocess_dcm(input_dir, output_dir):
             shutil.move(str(target), str(output_dir))
         else:
             os.remove(str(fdcm))
-            
+
+def determine_num_interpolated_phases(fpath_gt_pipeline_xml):
+    return int(get_gadget_property_from_xml(fpath_gt_pipeline_xml, 'PhisioInterp', 'phases'))
+
 def extract_dcm_number_from_gt_recon(fname_dcm):
     num_digits = 6
     num_slots_suffix=4

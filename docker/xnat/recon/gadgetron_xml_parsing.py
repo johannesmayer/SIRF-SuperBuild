@@ -9,6 +9,10 @@ def parse_gadgetron_XML(fname_xml):
         _, _, el.tag = el.tag.rpartition('}') # strip namespace
     return it.root
 
+def get_gadget_property_from_xml(fname_xml, gadget_name, property_name):
+    root = parse_gadgetron_XML(fname_xml)
+    return get_gadget_property(root, gadget_name, property_name)
+
 def get_gadget_property(root, gadget_name, property_name):
     gt = get_gadget_by_name(root, gadget_name)
     return get_property_value(gt, property_name)
