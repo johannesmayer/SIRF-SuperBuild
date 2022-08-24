@@ -45,3 +45,6 @@ WIN32/
 
 # macOS
 .DS_Store
+
+# Python
+*.pyc
