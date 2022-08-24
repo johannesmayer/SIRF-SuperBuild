@@ -12,3 +12,4 @@ olefile      # CIL
 nibabel
 deprecation
 nose
+ismrmrd
