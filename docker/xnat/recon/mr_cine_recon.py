@@ -4,6 +4,8 @@ import shutil
 from pathlib import Path
 import sirf_preprocessing
 
+import ismrmrd
+
 from gadgetron_xml_parsing import get_gadget_property_from_xml
 
 path_recon_execution = Path('/')
@@ -22,7 +24,9 @@ def main(path_in, fpath_output_prefix):
         fname_preprocessed = preprocess_rawdata(fname_raw, path_temp_files)
         recon(fname_preprocessed, fname_config)
         clean_up_reconfiles(path_recon_execution)
-        postprocess_dcm(path_recon_execution, fpath_output_prefix)
+
+        num_recon_slices = determine_num_slices(fname_raw)
+        postprocess_dcm(path_recon_execution, fpath_output_prefix,num_recon_slices)
 
     print('python finished')
 
@@ -54,20 +58,28 @@ def clean_up_reconfiles(recon_path):
         os.remove(f)
 
 
-def postprocess_dcm(input_dir, output_dir):
+def determine_num_slices(fpath_raw):
+    dset = ismrmrd.Dataset(fpath_raw, 'dataset', create_if_needed=False)
+    header = ismrmrd.xsd.CreateFromDocument(dset.read_xml_header())
+
+    num_slices = 1 + header.encoding[0].encodingLimits.slice.maximum - header.encoding[0].encodingLimits.slice.minimum
+    return num_slices
+
+def postprocess_dcm(input_dir, output_dir,num_recon_slices):
     print(f"--- Postprocessing gadgetron reconstruction: Searching for dicoms in {input_dir} and moving them to {output_dir}")
 
     flist_dcm=sorted(input_dir.glob("*.dcm"))
 
     num_recon_phases = determine_num_interpolated_phases(fname_config)
-    all_imgs = len(flist_dcm)
-    first_img_num = all_imgs - num_recon_phases 
+    num_tot_imgs = len(flist_dcm)
+    num_acq_phases = num_tot_imgs/num_recon_slices - num_recon_phases
+
     for fdcm in flist_dcm:
 
         recon_number = extract_dcm_number_from_gt_recon(fdcm)
         target = Path(fdcm.parent / f"gt_recon_{recon_number}.dcm")
-
-        if int(recon_number) >= first_img_num:
+        
+        if is_recon_number_relevant(recon_number, num_acq_phases, num_recon_phases, num_recon_slices)
             fdcm.rename(target)
             shutil.move(str(target), str(output_dir))
         else:
@@ -80,6 +92,16 @@ def extract_dcm_number_from_gt_recon(fname_dcm):
     num_digits = 6
     num_slots_suffix=4
     return fname_dcm.parts[-1][-(num_digits+num_slots_suffix):-num_slots_suffix]
+
+def is_recon_number_relevant(number, num_acq_phases, num_interpol_phases , num_recon_slices):
+    from itertools import product
+    offsets = [nslc * (num_interpol_phases + num_acq_phases) for nslc in range(num_recon_slices)]
+    interpol_range = [i for i in range(num_acq_phases, num_acq_phases+num_interpol_phases)]
+
+    relevant_numbers = [ i+o for i,o in product(offsets,interpol_range)]
+
+    return number in relevant_numbers
+
 
 ### looped reconstruction over files in input path
 path_in  = Path(sys.argv[1])
