@@ -79,7 +79,7 @@ def postprocess_dcm(input_dir, output_dir,num_recon_slices):
         recon_number = extract_dcm_number_from_gt_recon(fdcm)
         target = Path(fdcm.parent / f"gt_recon_{recon_number}.dcm")
         
-        if is_recon_number_relevant(recon_number, num_acq_phases, num_recon_phases, num_recon_slices)
+        if is_recon_number_relevant(recon_number, num_acq_phases, num_recon_phases, num_recon_slices):
             fdcm.rename(target)
             shutil.move(str(target), str(output_dir))
         else:
@@ -91,7 +91,7 @@ def determine_num_interpolated_phases(fpath_gt_pipeline_xml):
 def extract_dcm_number_from_gt_recon(fname_dcm):
     num_digits = 6
     num_slots_suffix=4
-    return fname_dcm.parts[-1][-(num_digits+num_slots_suffix):-num_slots_suffix]
+    return int(fname_dcm.parts[-1][-(num_digits+num_slots_suffix):-num_slots_suffix])
 
 def is_recon_number_relevant(number, num_acq_phases, num_interpol_phases , num_recon_slices):
     from itertools import product
