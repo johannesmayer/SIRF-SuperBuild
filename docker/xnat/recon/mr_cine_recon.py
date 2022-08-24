@@ -94,11 +94,9 @@ def extract_dcm_number_from_gt_recon(fname_dcm):
     return int(fname_dcm.parts[-1][-(num_digits+num_slots_suffix):-num_slots_suffix])
 
 def is_recon_number_relevant(number, num_acq_phases, num_interpol_phases , num_recon_slices):
-    from itertools import product
-    offsets = [nslc * (num_interpol_phases + num_acq_phases) for nslc in range(num_recon_slices)]
-    interpol_range = [i for i in range(num_acq_phases, num_acq_phases+num_interpol_phases)]
-
-    relevant_numbers = [ i+o for i,o in product(offsets,interpol_range)]
+    # first gadgetron writes all reconstructed images, then all that are the output of the PhysioInterpolation gadget
+    offset = num_recon_slices * num_acq_phases
+    relevant_numbers = [ i for i in range(offset,(num_acq_phases+num_interpol_phases)*num_recon_slices)]
 
     return number in relevant_numbers
 
