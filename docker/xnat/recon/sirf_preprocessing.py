@@ -1,42 +1,61 @@
 import numpy as np
-import os
-
 from collections import Counter
 import sirf.Gadgetron as pMR
 
 def preprocess(fname_in,fname_out):
-    
+
     rd = pMR.AcquisitionData(fname_in)
-    rd_preprocessed = rd.copy()
-    
+
+    rd_preprocessed = rd.new_acquisition_data()
+    slices = np.unique(rd.get_ISMRMRD_info('slice'))
+
+    for slc in slices:
+        rd_slice = get_slice_subset(rd, slc)
+        rd_slice = fill_undersampled_phases(rd_slice)
+        append_acquisitiondata(rd_preprocessed, rd_slice)
+
+    rd_preprocessed.write(fname_out)
+
+    return True
+
+def append_acquisitiondata(rd_to, rd_from):
+
+    for i in range(rd_from.number()):
+        acq = rd_from.acquisition(i)
+        rd_to.append_acquisition(acq)
+
+    return rd_to
+
+def fill_undersampled_phases(rawdata):
+
+    rd_phase_filled = rawdata.copy()
+
     # get the undersampled and last fully sampled phase
-    undersampled_phases, fsp = get_undersampled_phases(rd)
+    undersampled_phases, fsp = get_undersampled_phases(rawdata)
 
     # get phase encoding for last fully sampled phase
-    pe_fs = get_phasencoding_for_phase(rd,fsp)
+    pe_fs = get_phasencoding_for_phase(rawdata,fsp)
 
-    fullysampled_data = get_phase_subset(rd, fsp)
+    fullysampled_data = get_phase_subset(rawdata, fsp)
 
     print(f"We have found undersampled phases: {undersampled_phases}.")
     print(f"Fully sampled reference phase: {fsp}.")
     for usp in undersampled_phases:
-        cphaseenc = get_phasencoding_for_phase(rd,usp)
+        cphaseenc = get_phasencoding_for_phase(rawdata,usp)
 
         missing_points = list(set(pe_fs) - set(cphaseenc))
         rd_missing = get_missing_pe_points(fullysampled_data, missing_points)
 
-        max_time_stamp = get_maximum_physio_timestamp_for_phase(rd, usp)
+        max_time_stamp = get_maximum_physio_timestamp_for_phase(rawdata, usp)
         print(f"Setting the time stamp of {max_time_stamp} to hope for better distribution.")
         print(f"adding {rd_missing.number()} phase encoding points to phase {usp}")
         for i in range(rd_missing.number()):
             acq = rd_missing.acquisition(i)
             acq.set_phase(usp)
             acq.set_physiology_time_stamp(max_time_stamp,0)
-            rd_preprocessed.append_acquisition(acq)
+            rd_phase_filled.append_acquisition(acq)
 
-    rd_preprocessed.write(fname_out)
-    
-    return True
+    return rd_phase_filled
 
 def get_maximum_physio_timestamp_for_phase(rawdata, phase):
 
@@ -61,22 +80,30 @@ def get_phasencoding_for_phase(rawdata, phase_number):
     rawdata = get_phase_subset(rawdata,phase_number)
     return rawdata.get_ISMRMRD_info('kspace_encode_step_1')
 
-def get_phase_subset(rawdata,phase_number):
+def get_encoding_subset(rawdata, encoding_dimension, dim_number):
 
-    cardiac_phase = rawdata.get_ISMRMRD_info('phase')
+    acquisition_dim = rawdata.get_ISMRMRD_info(encoding_dimension)
     idx_all = np.arange(rawdata.number())
-    idx_phase_number = idx_all[cardiac_phase == phase_number]
+    idx_phase_number = idx_all[acquisition_dim == dim_number]
 
     return rawdata.get_subset(idx_phase_number)
 
 
+def get_phase_subset(rawdata,phase_number):
+
+    return get_encoding_subset(rawdata, 'phase', phase_number)
+
+def get_slice_subset(rawdata,slice_number):
+
+    return get_encoding_subset(rawdata, 'slice', slice_number)
+
 def get_missing_pe_points(rawdata,missing_points):
-    
+
     pe_points = rawdata.get_ISMRMRD_info('kspace_encode_step_1')
 
     overlap = np.isin(pe_points, missing_points)
     idx_all = np.arange(rawdata.number())
     idx_missing = idx_all[overlap]
-    
+
     return rawdata.get_subset(idx_missing)
 
