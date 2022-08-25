@@ -3,20 +3,22 @@ from collections import Counter
 import sirf.Gadgetron as pMR
 
 def preprocess(fname_in,fname_out):
+    try:
+        rd = pMR.AcquisitionData(fname_in)
 
-    rd = pMR.AcquisitionData(fname_in)
+        rd_preprocessed = rd.new_acquisition_data()
+        slices = np.unique(rd.get_ISMRMRD_info('slice'))
 
-    rd_preprocessed = rd.new_acquisition_data()
-    slices = np.unique(rd.get_ISMRMRD_info('slice'))
+        for slc in slices:
+            rd_slice = get_slice_subset(rd, slc)
+            rd_slice = fill_undersampled_phases(rd_slice)
+            append_acquisitiondata(rd_preprocessed, rd_slice)
 
-    for slc in slices:
-        rd_slice = get_slice_subset(rd, slc)
-        rd_slice = fill_undersampled_phases(rd_slice)
-        append_acquisitiondata(rd_preprocessed, rd_slice)
+        rd_preprocessed.write(fname_out)
 
-    rd_preprocessed.write(fname_out)
-
-    return True
+        return get_acquired_kspace_dimensions(rd_preprocessed)
+    except:
+        return False
 
 def append_acquisitiondata(rd_to, rd_from):
 
@@ -25,6 +27,15 @@ def append_acquisitiondata(rd_to, rd_from):
         rd_to.append_acquisition(acq)
 
     return rd_to
+
+def get_acquired_kspace_dimensions(rd):
+    slices = np.unique(rd.get_ISMRMRD_info('slice'))
+    phases = np.unique(rd.get_ISMRMRD_info('phase'))
+
+    dims = {'phase': len(phases),
+            'slice': len(slices)}
+    
+    return dims
 
 def fill_undersampled_phases(rawdata):
 
