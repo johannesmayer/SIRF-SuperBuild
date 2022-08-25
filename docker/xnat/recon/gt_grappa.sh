@@ -16,5 +16,3 @@ gadgetron_ismrmrd_client --filename=$fname_in --outfile=" " --config-local=$fnam
 # deleting junk files
 find -type f -name "*_attrib.xml" -delete
 
-#
-# python3 /recon/postprocess_dcm.py -i=$dir_of_recon -o=${fdir_out}
