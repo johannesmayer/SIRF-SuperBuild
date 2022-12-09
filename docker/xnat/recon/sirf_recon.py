@@ -6,6 +6,8 @@ import sirf_preprocessing
 
 from gadgetron_xml_parsing import get_gadget_property_from_xml
 
+import sirf.Gadgetron as pMR
+
 path_recon_execution = Path('/')
 path_temp_files = Path('/home/')
 fname_config="/recon/gtpipelines/Generic_Cartesian_Grappa.xml"
@@ -39,6 +41,59 @@ def preprocess_rawdata(fname_rawdata, fpath_output):
         return fname_processed_output, kspace_dims
     else:
         raise AssertionError("The preprocessing step failed. Aborting reconstructions.")
+
+def recon_pure_sirf():
+    
+def recon_complete_with_sirf(fname_raw, fprefix_out):
+
+    # acq_data = AcquisitionData(str(fname_raw))
+
+    acq_data = preprocess(str(fname_raw), "/media/sf_CCPPETMR/tmp.h5")
+    print(type(acq_data))
+    # Pre-process this input data.
+    # (Currently this is a Python script that just sets up a 3 chain gadget.
+    # In the future it will be independent of the MR recon engine.)
+    print('---\n pre-processing acquisition data...')
+    preprocessed_data = preprocess_acquisition_data(acq_data)
+
+    # Perform reconstruction of the preprocessed data.
+    # 1. set the reconstruction to be for Cartesian GRAPPA data.
+    recon_gadgets = ['AcquisitionAccumulateTriggerGadget',
+            'B2B:BucketToBufferGadget', 
+            'GenericReconCartesianReferencePrepGadget', 
+            'GenericReconEigenChannelGadget',
+            'GRAPPA:GenericReconCartesianGrappaGadget', 
+            'GenericReconPartialFourierHandlingFilterGadget',
+            'GenericReconKSpaceFilteringGadget',
+            'GenericReconFieldOfViewAdjustmentGadget', 
+            'GenericReconImageArrayScalingGadget', 
+            'ImageArraySplitGadget',
+            'PhysioInterpolationGadget(phases=30, mode=0, first_beat_on_trigger=true, interp_method=BSpline)',
+            # 'ComplexToFloatGadget',
+            # 'FloatToUShortGadget'
+            ]
+
+    recon = Reconstructor(recon_gadgets)
+
+    recon.set_gadget_property("B2B", "N_dimension", "phase")
+    recon.set_gadget_property("B2B", "S_dimension", "set")
+    recon.set_gadget_property('GRAPPA', 'send_out_gfactor', True)
+
+    # 2. set the reconstruction input to be the data we just preprocessed.
+    recon.set_input(preprocessed_data)
+
+    # 3. run (i.e. 'process') the reconstruction.
+    print('---\n reconstructing...\n')
+    recon.process()
+
+    # retrieve reconstruced image and G-factor data
+    image_data = recon.get_output('Image PhysioInterp')
+    # image_data = recon.get_output('image')
+    print(f"We have {image_data.number()} images to write.")
+    image_data = image_data.abs()
+    image_data.write(str(fprefix_out / "output.dcm"))
+
+    return None
 
 def recon(fname_rawdata, fname_config):
     cmd_recon = f"gadgetron_ismrmrd_client --filename={fname_rawdata} --outfile=' ' --config-local={fname_config}"
