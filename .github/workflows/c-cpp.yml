@@ -3,8 +3,24 @@ name: run superbuild and test
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+    - 'docker/Dockerfile'
+    - 'docker/*yml'
+    - '**.md'
+    - 'jupyterhub/**'
+    - 'VirtualBox/**'
+    - '.github/workflows/*docker*'
+    
   pull_request:
     branches: [ master ]
+    paths-ignore:
+    - 'docker/Dockerfile'
+    - 'docker/*yml'
+    - '**.md'
+    - 'jupyterhub/**'
+    - 'VirtualBox/**'
+    - '.github/workflows/*docker*'
+    
 
 jobs:
   build:
@@ -43,24 +59,24 @@ jobs:
           BUILD_TYPE: "Release"
           EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON -DUSE_ROOT:BOOL=ON"
           DEVEL_BUILD: "ON"
-        - os: ubuntu-latest
-          compiler: gcc
-          compiler_version: 8
-          BUILD_TYPE: "Release"
-          EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-          DEVEL_BUILD: "OFF"
-        - os: ubuntu-18.04
-          compiler: gcc
-          compiler_version: 8
-          BUILD_TYPE: "Release"
-          EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-          DEVEL_BUILD: "OFF"
-        - os: ubuntu-18.04
-          compiler: gcc
-          compiler_version: 8
-          BUILD_TYPE: "Release"
-          EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-          DEVEL_BUILD: "ON"
+        # - os: ubuntu-latest
+        #   compiler: gcc
+        #   compiler_version: 8
+        #   BUILD_TYPE: "Release"
+        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
+        #   DEVEL_BUILD: "OFF"
+        # - os: ubuntu-18.04
+        #   compiler: gcc
+        #   compiler_version: 8
+        #   BUILD_TYPE: "Release"
+        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
+        #   DEVEL_BUILD: "OFF"
+        # - os: ubuntu-18.04
+        #   compiler: gcc
+        #   compiler_version: 8
+        #   BUILD_TYPE: "Release"
+        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
+        #   DEVEL_BUILD: "ON"
 
       # let's run all of them, as opposed to aborting when one fails
       fail-fast: false
@@ -70,12 +86,14 @@ jobs:
     - name: install_dependencies
       run: 
           cd docker;
+          sudo apt-get remove libunwind-14 -y;
+          sudo apt-get install libunwind-dev -y;
           sudo bash raw-ubuntu.sh;
           sudo bash build_essential-ubuntu.sh;
           sudo bash build_python-ubuntu.sh;
           sudo bash build_gadgetron-ubuntu.sh;
           sudo bash build_system-ubuntu.sh;
-          bash user_python-ubuntu.sh ~/virtualenv python3 ;
+          PYTHON_EXECUTABLE=python3 PYTHON_INSTALL_DIR=~/virtualenv bash user_python-ubuntu.sh;
     - name: ccache
       uses: hendrikmuhs/ccache-action@v1
       with:
@@ -93,7 +111,8 @@ jobs:
           fi
           if test 'XX${{ matrix.compiler_version }}' != 'XX'; then
             CC=${CC}-${{ matrix.compiler_version }}
-            CXX=${CXX}-${{ matrix.compiler_version }}   
+            CXX=${CXX}-${{ matrix.compiler_version }}
+            sudo apt install -yq ${CXX} ${CC}
           fi
 
           export CC CXX
@@ -110,17 +129,24 @@ jobs:
           set -ex;
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           export superbuild=`pwd`;
-          export BUILD_FLAGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=~/install";
+          export BUILD_FLAGS="-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=ON -DUSE_SYSTEM_Boost=OFF -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON -DCMAKE_INSTALL_PREFIX=~/install -DPYVER=3 -DCC_9=$(which gcc-9) -DCXX_9=$(which g++-9) -DUSE_SYSTEM_RocksDB=OFF -DBUILD_TESTING_Gadgetron:BOOL=ON";
           mkdir -p build/;
           cd build;
           source ~/virtualenv/bin/activate;
           cmake -S ${GITHUB_WORKSPACE} ${BUILD_FLAGS} ${EXTRA_BUILD_FLAGS} ${DEVEL_BUILD};
     - name: build
       shell: bash
-      run: 
+      run: | 
           cd ${GITHUB_WORKSPACE}/build;
           source ~/virtualenv/bin/activate;
-          cmake --build . -j 2;
+          cmake --build . -j 1;
+    - name: Upload build log files for debugging
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: build_log_files-${{ matrix.os }}-${{ matrix.compiler }}${{ matrix.compiler_version }}-${{ matrix.BUILD_TYPE }}-DEVEL=${{ matrix.DEVEL_BUILD }}-run=${{ github.run_number }}-id=${{ github.run_id }}
+        path: ${{ github.workspace }}/build/**/*.log
+        retention-days: 7
     - name: tests
       shell: bash
       run: 

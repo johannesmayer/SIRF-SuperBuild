@@ -1,6 +1,6 @@
 #========================================================================
 # Author: Edoardo Pasca
-# Copyright 2019 UKRI STFC
+# Copyright 2018, 2020 STFC
 #
 # This file is part of the CCP SyneRBI (formerly PETMR) Synergistic Image Reconstruction Framework (SIRF) SuperBuild.
 #
@@ -19,10 +19,10 @@
 #=========================================================================
 
 #This needs to be unique globally
-set(proj CIL-ASTRA)
+set(proj range-v3)
 
 # Set dependency list
-set(${proj}_DEPENDENCIES "CIL;astra-python-wrapper")
+set(${proj}_DEPENDENCIES "")
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} DEPENDS_VAR ${proj}_DEPENDENCIES)
@@ -31,49 +31,37 @@ ExternalProject_Include_Dependencies(${proj} DEPENDS_VAR ${proj}_DEPENDENCIES)
 set(externalProjName ${proj})
 SetCanonicalDirectoryNames(${proj})
 
-
 if(NOT ( DEFINED "USE_SYSTEM_${externalProjName}" AND "${USE_SYSTEM_${externalProjName}}" ) )
   message(STATUS "${__indent}Adding project ${proj}")
+  
+  ### --- Project specific additions here
   SetGitTagAndRepo("${proj}")
 
-  ### --- Project specific additions here
-  # set(libcilreg_Install_Dir ${SUPERBUILD_INSTALL_DIR})
-
-  # #message(STATUS "HDF5_ROOT in External_SIRF: " ${HDF5_ROOT})
-  # set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${SUPERBUILD_INSTALL_DIR})
-  # set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} ${SUPERBUILD_INSTALL_DIR})
-
-
-  message("${proj} URL " ${${proj}_URL}  )
-  message("${proj} TAG " ${${proj}_TAG}  )
   # conda build should never get here
-  if("${PYTHON_STRATEGY}" STREQUAL "PYTHONPATH")
-    # in case of PYTHONPATH it is sufficient to copy the files to the
-    # $PYTHONPATH directory
-    ExternalProject_Add(${proj}
-      ${${proj}_EP_ARGS}
-      ${${proj}_EP_ARGS_GIT}
-      ${${proj}_EP_ARGS_DIRS}
+  set (${proj}_CMAKE_ARGS 
+    -DCMAKE_INSTALL_PREFIX:PATH=${${proj}_INSTALL_DIR}
+  )
+  ExternalProject_Add(${proj}
+    ${${proj}_EP_ARGS}
+    ${${proj}_EP_ARGS_GIT}
+    ${${proj}_EP_ARGS_DIRS}
 
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ""
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory ${${proj}_SOURCE_DIR}/Wrappers/Python/cil/plugins ${PYTHON_DEST}/cil/plugins
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${${proj}_INSTALL_DIR}
-      DEPENDS ${${proj}_DEPENDENCIES}
-    )
-
-  else()
-    # if SETUP_PY one can launch the conda build.sh script setting
-    # the appropriate variables.
-    message(FATAL_ERROR "Only PYTHONPATH install method is currently supported")
-  endif()
-
+    CMAKE_ARGS ${${proj}_CMAKE_ARGS}
+  )
 
   set(${proj}_ROOT        ${${proj}_SOURCE_DIR})
   set(${proj}_INCLUDE_DIR ${${proj}_SOURCE_DIR})
 
-else()
-  ExternalProject_Add_Empty(${proj} DEPENDS "${${proj}_DEPENDENCIES}"
-                            ${${proj}_EP_ARGS_DIRS}
-  )
+  add_test(NAME range_TESTS_
+           COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIGURATION> --output-on-failure
+           WORKING_DIRECTORY ${${proj}_BINARY_DIR})
+     
+  else()
+    ExternalProject_Add_Empty(${proj} DEPENDS "${${proj}_DEPENDENCIES}"
+      SOURCE_DIR ${${proj}_SOURCE_DIR}
+      BINARY_DIR ${${proj}_BINARY_DIR}
+      DOWNLOAD_DIR ${${proj}_DOWNLOAD_DIR}
+      STAMP_DIR ${${proj}_STAMP_DIR}
+      TMP_DIR ${${proj}_TMP_DIR}
+    )
 endif()

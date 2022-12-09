@@ -2,7 +2,7 @@
 # Author: Edoardo Pasca
 # Author: Benjamin A Thomas
 # Author: Kris Thielemans
-# Copyright 2017-2021 University College London
+# Copyright 2017-2021, 2022 University College London
 # Copyright 2017-2021 Science Technology Facilities Council
 #
 # This file is part of the CCP SyneRBI (formerly PETMR) Synergistic Image Reconstruction Framework (SIRF) SuperBuild.
@@ -29,15 +29,21 @@ if (APPLE) # really should be checking for CLang
     set(Boost_URL http://downloads.sourceforge.net/project/boost/boost/${Boost_VERSION}/boost_1_68_0.zip)
     set(Boost_MD5 f4096c4583947b0eb103c8539f1623a3)
 else()
-     set(Boost_VERSION 1.72.0)
+     # Use version 1.78.0 version
+     set(Boost_VERSION 1.78.0)
      if (BUILD_GADGETRON)
-       set(Boost_REQUIRED_VERSION 1.65.1)
+     # https://github.com/gadgetron/gadgetron/blob/12ffc43debb9bad2e170713006d29dea78d966bf/CMakeLists.txt#L205-L209
+       set(Boost_REQUIRED_VERSION 1.71.0)
      else()
        # Ubutnu 16.04 version should be fine
        set(Boost_REQUIRED_VERSION 1.58.0)
      endif()
-     set(Boost_URL http://downloads.sourceforge.net/project/boost/boost/${Boost_VERSION}/boost_1_72_0.zip)
-     set(Boost_MD5 93cf8511f2e9b4456e5178cb07fc829d)
+     # set(Boost_URL http://downloads.sourceforge.net/project/boost/boost/${Boost_VERSION}/boost_1_71_0.zip)
+     # https://github.com/boostorg/math/pull/676
+     # https://github.com/boostorg/math/commit/720536a08e4e33639869e1b7a99d9ec923409c0b
+     # seems the bugfix entered Boost 1.78.0 which is not yet released, but probably 1.71.0 is patched on Ubuntu
+     set (Boost_URL https://sourceforge.net/projects/boost/files/boost/1.78.0.beta1/boost_1_78_0_b1.zip)
+     set(Boost_MD5 40ad9e539f6f26fab0b3d314eb6c0290)
 endif()
 
 ## Armadillo
@@ -74,7 +80,12 @@ if (BUILD_MATLAB)
   # but it's been stuck on 1.8.12 for a long time
   set(DEFAULT_HDF5_TAG hdf5-1_8_12)
 else()
-  set(DEFAULT_HDF5_TAG hdf5-1_10_1)
+  if (WIN32)
+    # need a recent version of HDF5 for ITK, see https://github.com/SyneRBI/SIRF-SuperBuild/issues/680
+    set(DEFAULT_HDF5_TAG hdf5-1_13_1)
+  else()
+    set(DEFAULT_HDF5_TAG hdf5-1_10_1)
+  endif()
 endif()
 
 ## SWIG
@@ -91,11 +102,11 @@ option(DEVEL_BUILD "Use current versions of major packages" OFF)
 
 ## Googletest
 set(GTest_URL https://github.com/google/googletest )
-set(GTest_TAG release-1.11.0)
+set(GTest_TAG release-1.12.1)
 
 ## glog
 set(DEFAULT_glog_URL https://github.com/google/glog )
-set(DEFAULT_glog_TAG v0.3.5)
+set(DEFAULT_glog_TAG v0.6.0)
 
 ## ITK
 set(DEFAULT_ITK_URL https://github.com/InsightSoftwareConsortium/ITK.git)
@@ -104,11 +115,11 @@ set(DEFAULT_ITK_TAG v5.2.1)
 ## NIFTYREG
 set(DEFAULT_NIFTYREG_URL https://github.com/KCL-BMEIS/niftyreg.git )
 set(DEFAULT_NIFTYREG_TAG 8ad2f11507ddedb09ed74a9bd97377b70532ee75)
-set(DEFAULT_NIFTYREG_REQUIRED_VERSION 1.5.68)
+set(NIFTYREG_REQUIRED_VERSION 1.5.68)
 
 ## ISMRMRD
 set(DEFAULT_ISMRMRD_URL https://github.com/ismrmrd/ismrmrd )
-set(DEFAULT_ISMRMRD_TAG v1.7.0)
+set(DEFAULT_ISMRMRD_TAG origin/master)
 #if (WIN32)
 #  set(DEFAULT_ISMRMRD_URL https://github.com/SyneRBI/ismrmrd )
 #  set(DEFAULT_ISMRMRD_TAG program_options_fix)
@@ -119,7 +130,7 @@ set(DEFAULT_ISMRMRD_TAG v1.7.0)
 
 ## Gadgetron
 set(DEFAULT_Gadgetron_URL https://github.com/gadgetron/gadgetron )
-set(DEFAULT_Gadgetron_TAG b6191eaaa72ccca6c6a5fe4c0fa3319694f512ab)
+set(DEFAULT_Gadgetron_TAG master)
 
 ## ASTRA
 set(DEFAULT_astra-toolbox_URL https://github.com/astra-toolbox/astra-toolbox )
@@ -149,13 +160,16 @@ set(DEFAULT_JSON_URL https://github.com/nlohmann/json.git )
 set(DEFAULT_JSON_TAG v3.10.4)
 
 # CCPi CIL
+# CIL-ASTRA has been merged into CIL from acf3ddf5c61b8e216fe7891d7720f9bbd436c9b3
+
+# minimum supported version of CIL supported is 22.0.0 or from commit acf3ddf5c61b8e216fe7891d7720f9bbd436c9b3
+# due to a change in CIL's building mechanism, however due to a unit test failure the minimum CIL required
+# commit is a6062410028c9872c5b355be40b96ed1497fed2a
 set(DEFAULT_CIL_URL https://github.com/TomographicImaging/CIL.git)
-# TODO update to a tagged version > v21.3.1 once available
-set(DEFAULT_CIL_TAG f5c06566215564ad78ba0f1738d0836f3ad37a60)
-set(DEFAULT_CIL-ASTRA_URL https://github.com/TomographicImaging/CIL-ASTRA.git)
-set(DEFAULT_CIL-ASTRA_TAG "v21.3.0")
+set(DEFAULT_CIL_TAG a6062410028c9872c5b355be40b96ed1497fed2a)
+
 set(DEFAULT_CCPi-Regularisation-Toolkit_URL https://github.com/vais-ral/CCPi-Regularisation-Toolkit.git)
-set(DEFAULT_CCPi-Regularisation-Toolkit_TAG "v20.09")
+set(DEFAULT_CCPi-Regularisation-Toolkit_TAG "v21.0.0")
 
 # CERN ROOT
 set(DEFAULT_ROOT_URL https://github.com/root-project/root)
@@ -164,6 +178,24 @@ set(DEFAULT_ROOT_TAG "v6-24-06")
 # ACE
 set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
 set(DEFAULT_ACE_TAG v6.5.9)
+
+# range-v3
+set(DEFAULT_range-v3_URL https://github.com/ericniebler/range-v3.git )
+set(DEFAULT_range-v3_TAG 0.11.0)
+
+set(DEFAULT_RocksDB_URL https://github.com/facebook/rocksdb.git )
+set(DEFAULT_RocksDB_TAG v6.26.0)
+
+set(DEFAULT_mrd-storage-server_URL https://github.com/ismrmrd/mrd-storage-server.git)
+set(DEFAULT_mrd-storage-server_TAG origin/main)
+
+set(DEFAULT_Date_URL https://github.com/HowardHinnant/date.git )
+set(DEFAULT_Date_TAG master)
+
+# works only for Linux
+set(Go_URL https://go.dev/dl/go1.19.3.linux-amd64.tar.gz)
+set(Go_SHA256 74b9640724fd4e6bb0ed2a1bc44ae813a03f1e72a4c76253e2d5c015494430ba)
+
 
 option (DEVEL_BUILD "Developer Build" OFF)
 mark_as_advanced(DEVEL_BUILD)
@@ -179,32 +211,42 @@ if (DEVEL_BUILD)
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
   set(DEFAULT_STIR_TAG origin/master)
+  set(STIR_REQUIRED_VERSION "5.0.0")
 
   ## siemens_to_ismrmrd
   set(DEFAULT_siemens_to_ismrmrd_URL https://github.com/ismrmrd/siemens_to_ismrmrd )
   set(DEFAULT_siemens_to_ismrmrd_TAG b87759e49e53dab4939147eb52b7a0e6465f3d04)
+  if (BUILD_siemens_to_ismrmrd)
+    set(ISMRMRD_REQUIRED_VERSION "1.7")
+  else()
+    set(ISMRMRD_REQUIRED_VERSION "1.4.2.1")
+  endif()
 
   ## pet-rd-tools
   set(DEFAULT_pet_rd_tools_URL https://github.com/UCL/pet-rd-tools )
   set(DEFAULT_pet_rd_tools_TAG origin/master)
 
+  set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
+  set(DEFAULT_ACE_TAG origin/ACE_version_6.5.9)
+
   # CCPi CIL
   set(DEFAULT_CIL_URL https://github.com/TomographicImaging/CIL.git)
-  set(DEFAULT_CIL_TAG origin/master)
-  set(DEFAULT_CIL-ASTRA_URL https://github.com/TomographicImaging/CIL-ASTRA.git)
-  set(DEFAULT_CIL-ASTRA_TAG origin/master)
-  set(DEFAULT_CCPi-Regularisation-Toolkit_URL https://github.com/vais-ral/CCPi-Regularisation-Toolkit.git)
-  set(DEFAULT_CCPi-Regularisation-Toolkit_TAG origin/master)
+  set(DEFAULT_CIL_TAG origin/master )
+  
 
 else()
-  set(DEFAULT_SIRF_TAG origin/expose-acquisition-setters)
+  set(DEFAULT_SIRF_TAG origin/oh-recon)
+
+  #set(DEFAULT_SIRF_TAG v3.3.0)
+  # set (DEFAULT_SIRF_TAG 2ed708bb8c8dc4ac6e1b081a1f9800754621b5fd)
 
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
-  set(DEFAULT_STIR_TAG rel_4.1.1)
+  set(DEFAULT_STIR_TAG rel_5.0.2)
 
   # ismrmrd
-  set(DEFAULT_ISMRMRD_TAG v1.7.0)
+  set(DEFAULT_ISMRMRD_TAG master)
+
   ## siemens_to_ismrmrd
   set(DEFAULT_siemens_to_ismrmrd_URL https://github.com/ismrmrd/siemens_to_ismrmrd)
   set(DEFAULT_siemens_to_ismrmrd_TAG b87759e49e53dab4939147eb52b7a0e6465f3d04)
@@ -213,6 +255,13 @@ else()
   set(DEFAULT_pet_rd_tools_URL https://github.com/UCL/pet-rd-tools )
   set(DEFAULT_pet_rd_tools_TAG v2.0.1)
 
+  # ACE
+  set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
+  set(DEFAULT_ACE_TAG origin/master)
+  
+  # range-v3
+  set(DEFAULT_range-v3_TAG origin/master)
+  
 endif()
 
 
@@ -250,8 +299,6 @@ set(CCPi-Regularisation-Toolkit_URL ${DEFAULT_CCPi-Regularisation-Toolkit_URL} C
 set(CCPi-Regularisation-Toolkit_TAG ${DEFAULT_CCPi-Regularisation-Toolkit_TAG} CACHE STRING ON)
 set(CIL_URL ${DEFAULT_CIL_URL} CACHE STRING ON)
 set(CIL_TAG ${DEFAULT_CIL_TAG} CACHE STRING ON)
-set(CIL-ASTRA_URL ${DEFAULT_CIL-ASTRA_URL} CACHE STRING ON)
-set(CIL-ASTRA_TAG ${DEFAULT_CIL-ASTRA_TAG} CACHE STRING ON)
 set(astra-toolbox_URL ${DEFAULT_astra-toolbox_URL} CACHE STRING ON)
 set(astra-toolbox_TAG ${DEFAULT_astra-toolbox_TAG} CACHE STRING ON)
 set(astra-python-wrapper_URL ${DEFAULT_astra-toolbox_URL} CACHE STRING ON)
@@ -270,6 +317,7 @@ set(NiftyPET_TAG ${DEFAULT_NiftyPET_TAG} CACHE STRING ON)
 
 set(parallelproj_URL ${DEFAULT_parallelproj_URL} CACHE STRING ON)
 set(parallelproj_TAG ${DEFAULT_parallelproj_TAG} CACHE STRING ON)
+set(parallelproj_REQUIRED_VERSION "1.0")
 
 set(SIRF-Contribs_URL ${DEFAULT_SIRF-Contribs_URL} CACHE STRING ON)
 set(SIRF-Contribs_TAG ${DEFAULT_SIRF-Contribs_TAG} CACHE STRING ON)
@@ -286,6 +334,18 @@ set(SPM_TAG ${DEFAULT_SPM_TAG} CACHE STRING ON)
 set(JSON_URL ${DEFAULT_JSON_URL} CACHE STRING ON)
 set(JSON_TAG ${DEFAULT_JSON_TAG} CACHE STRING ON)
 
+set(range-v3_URL ${DEFAULT_range-v3_URL} CACHE STRING ON)
+set(range-v3_TAG ${DEFAULT_range-v3_TAG} CACHE STRING ON)
+
+set(RocksDB_URL ${DEFAULT_RocksDB_URL} CACHE STRING ON)
+set(RocksDB_TAG ${DEFAULT_RocksDB_TAG} CACHE STRING ON)
+
+set(mrd-storage-server_URL ${DEFAULT_mrd-storage-server_URL} CACHE STRING ON)
+set(mrd-storage-server_TAG ${DEFAULT_mrd-storage-server_TAG} CACHE STRING ON)
+
+set(Date_URL ${DEFAULT_Date_URL} CACHE STRING ON)
+set(Date_TAG ${DEFAULT_Date_TAG} CACHE STRING ON)
+
 mark_as_advanced(SIRF_URL SIRF_TAG STIR_URL STIR_TAG
   Gadgetron_URL Gadgetron_TAG
   siemens_to_ismrmrd_URL siemens_to_ismrmrd_TAG
@@ -294,7 +354,6 @@ mark_as_advanced(SIRF_URL SIRF_TAG STIR_URL STIR_TAG
   glog_URL glog_TAG
   NIFTYREG_URL NIFTYREG_TAG
   CIL_URL CIL_TAG
-  CIL-ASTRA_URL CIL-ASTRA_TAG
   CCPi-Regularisation-Toolkit_URL CCPi-Regularisation-Toolkit_TAG
   NiftyPET_URL NiftyPET_TAG
   parallelproj_URL parallelproj_TAG
@@ -302,9 +361,12 @@ mark_as_advanced(SIRF_URL SIRF_TAG STIR_URL STIR_TAG
   ITK_URL ITK_TAG
   SPM_URL SPM_TAG
   JSON_URL JSON_TAG
+  range-v3_URL range-v3_TAG
   ROOT_URL ROOT_TAG
   astra-toolbox_URL astra-toolbox_TAG
   astra-python-wrapper_URL astra-python-wrapper_TAG
   ACE_URL ACE_TAG
-  
+  RocksDB_URL RocksDB_TAG
+  mrd-storage-server_URL mrd-storage-server_TAG
+  Date_URL Date_TAG
 )

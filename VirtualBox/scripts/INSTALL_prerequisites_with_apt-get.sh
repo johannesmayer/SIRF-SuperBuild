@@ -14,6 +14,9 @@ SUDO=sudo
 
 # TODO would be better to guarantee absolute path for SCRIPTS
 SCRIPTS="$(dirname $0)/../../docker"
+# uninstall pexpect which is preinstalled in the VM
+# https://github.com/SyneRBI/SIRF-SuperBuild/issues/742#issuecomment-1205090681
+$SUDO apt remove -y python3-pexpect
 
 $SUDO "$SCRIPTS/build_essential-ubuntu.sh"
 
@@ -33,14 +36,8 @@ ${APT_GET_INSTALL} libpugixml-dev
 echo "Installing expect"
 ${APT_GET_INSTALL} expect
 
-echo "Installing python APT packages"
-# we will use pip for most
-# some extra package needed for jupyter
-qt=pyqt5
-${APT_GET_INSTALL} python3-dev python3-pip python3-tk python3-${qt} python3-${qt}.qtsvg python3-${qt}.qtwebkit
-
-echo "Installing CIL pre-requisites..."
-${APT_GET_INSTALL} cython3 python3-h5py python3-wget
-# dependency for ASTRA-toolbox autotools-dev automake autogen autoconf libtool
+echo "Installing python-dev and python3-tk APT package"
+# we will use pip for everything else
+${APT_GET_INSTALL} python3-dev python3-tk
 
 echo "Run INSTALL_python_packages.sh after this."
