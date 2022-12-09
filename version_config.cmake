@@ -207,7 +207,8 @@ mark_as_advanced(DEVEL_BUILD)
 set(DEFAULT_SIRF_URL https://github.com/johannesmayer/SIRF.git )
 if (DEVEL_BUILD)
 
-  set (DEFAULT_SIRF_TAG origin/expose-acquisition-setters)
+  set(DEFAULT_SIRF_TAG origin/oh-recon)
+
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
   set(DEFAULT_STIR_TAG origin/master)
