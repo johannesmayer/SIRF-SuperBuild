@@ -241,8 +241,6 @@ RUN mkdir -p /recon
 RUN chmod 777 /recon
 COPY /xnat/recon /recon
 
-RUN chmod 777 /output
-
 USER "${NB_USER}"
 ENTRYPOINT /bin/bash
 
