@@ -22,11 +22,12 @@ def main(path_in, fpath_output_prefix):
 
     for fname_raw in list_rawdata:
         fname_preprocessed, kspace_dims = preprocess_rawdata(fname_raw, path_temp_files)
-        recon(fname_preprocessed, fname_config)
-        clean_up_reconfiles(path_recon_execution)
+#        recon(fname_preprocessed, fname_config)
+        recon_complete_with_sirf(fname_preprocessed, fpath_output_prefix)
+#        clean_up_reconfiles(path_recon_execution)
 
-        num_recon_slices = kspace_dims['slice']
-        postprocess_dcm(path_recon_execution, fpath_output_prefix,num_recon_slices)
+#        num_recon_slices = kspace_dims['slice']
+#        postprocess_dcm(path_recon_execution, fpath_output_prefix,num_recon_slices)
 
     print('python finished')
 
@@ -42,8 +43,6 @@ def preprocess_rawdata(fname_rawdata, fpath_output):
     else:
         raise AssertionError("The preprocessing step failed. Aborting reconstructions.")
 
-def recon_pure_sirf():
-    
 def recon_complete_with_sirf(fname_raw, fprefix_out):
 
     # acq_data = AcquisitionData(str(fname_raw))
@@ -91,7 +90,7 @@ def recon_complete_with_sirf(fname_raw, fprefix_out):
     # image_data = recon.get_output('image')
     print(f"We have {image_data.number()} images to write.")
     image_data = image_data.abs()
-    image_data.write(str(fprefix_out / "output.dcm"))
+    image_data.write(str(fprefix_out / "sirfrecon.dcm"))
 
     return None
 
