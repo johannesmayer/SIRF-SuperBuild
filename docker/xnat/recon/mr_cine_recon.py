@@ -6,5 +6,7 @@ from sirf_recon import main
 path_in  = Path(sys.argv[1])
 path_out = Path(sys.argv[2])
 
-main(path_in, path_out)
+success = main(path_in, path_out)
+
+sys.exit(success)
 

@@ -2,26 +2,25 @@ import numpy as np
 from collections import Counter
 import sirf.Gadgetron as pMR
 
-def preprocess(fname_in,fname_out):
-    try:
-        rd = pMR.AcquisitionData(fname_in)
+def preprocess(fname_in):
 
-        rd_preprocessed = rd.new_acquisition_data()
-        slices = np.unique(rd.get_ISMRMRD_info('slice'))
+    rd = pMR.AcquisitionData(fname_in)
 
-        acquired_kspace_dims = get_acquired_kspace_dimensions(rd)
-        if acquired_kspace_dims['phase'] == 1:
-            rd_preprocessed = rd
-        else:
-            for slc in slices:
-                rd_slice = get_slice_subset(rd, slc)
-                rd_slice = fill_undersampled_phases(rd_slice)
-                append_acquisitiondata(rd_preprocessed, rd_slice)
+    rd_preprocessed = rd.new_acquisition_data()
+    slices = np.unique(rd.get_ISMRMRD_info('slice'))
+    acquired_kspace_dims = get_acquired_kspace_dimensions(rd)
+    print(f"We have found kspace dimensions to be {acquired_kspace_dims} ")
+    if acquired_kspace_dims['phase'] == 1:
+        rd_preprocessed = rd
+    else:
+        for slc in slices:
+            rd_slice = get_slice_subset(rd, slc)
+            print(f"We have {rd_slice.number()} acquisitions in the slice {slc}.")
 
-        rd_preprocessed.write(fname_out)
-        return get_acquired_kspace_dimensions(rd_preprocessed)
-    except:
-        return False
+            rd_slice = fill_undersampled_phases(rd_slice)
+            append_acquisitiondata(rd_preprocessed, rd_slice)
+
+    return rd_preprocessed
 
 def append_acquisitiondata(rd_to, rd_from):
 
@@ -35,6 +34,7 @@ def get_acquired_kspace_dimensions(rd):
     slices = np.unique(rd.get_ISMRMRD_info('slice'))
     phases = np.unique(rd.get_ISMRMRD_info('phase'))
 
+    print(f"We found {phases} phases in the kspace dims.")
     dims = {'phase': len(phases),
             'slice': len(slices)}
 
@@ -86,7 +86,7 @@ def get_undersampled_phases(rawdata):
     median_num_ro_per_phase = np.median(sorted(pe_pts_per_phase))
     undersampled_phases = np.where(pe_pts_per_phase < median_num_ro_per_phase)
     last_fullysampled_phase = np.min(undersampled_phases[0]) - 1
-    
+
     return undersampled_phases[0], last_fullysampled_phase
 
 def get_phasencoding_for_phase(rawdata, phase_number):

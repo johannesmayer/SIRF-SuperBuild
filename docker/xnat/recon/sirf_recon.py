@@ -8,10 +8,6 @@ from gadgetron_xml_parsing import get_gadget_property_from_xml
 
 import sirf.Gadgetron as pMR
 
-path_recon_execution = Path('/')
-path_temp_files = Path('/home/')
-fname_config="/recon/gtpipelines/Generic_Cartesian_Grappa.xml"
-
 def main(path_in, fpath_output_prefix):
 
     print(f"Reading from {path_in}, writing into {fpath_output_prefix}")
@@ -19,41 +15,22 @@ def main(path_in, fpath_output_prefix):
     assert os.access(fpath_output_prefix, os.W_OK), f"You don't have write permission in {fpath_output_prefix}"
 
     list_rawdata = sorted(path_in.glob("*.h5"))
+    success = True
 
     for fname_raw in list_rawdata:
-        fname_preprocessed, kspace_dims = preprocess_rawdata(fname_raw, path_temp_files)
-#        recon(fname_preprocessed, fname_config)
-        recon_complete_with_sirf(fname_preprocessed, fpath_output_prefix)
-#        clean_up_reconfiles(path_recon_execution)
+        mr_data = sirf_preprocessing.preprocess(str(fname_raw))
+        success *= recon_complete_with_sirf(mr_data, fpath_output_prefix)
 
-#        num_recon_slices = kspace_dims['slice']
-#        postprocess_dcm(path_recon_execution, fpath_output_prefix,num_recon_slices)
+    print(f'Reconstruction finished successful? {success}')
 
-    print('python finished')
+    return int(not success)
 
-    return 0
+def recon_complete_with_sirf(mr_rawdata: pMR.AcquisitionData, fprefix_out: Path):
 
-def preprocess_rawdata(fname_rawdata, fpath_output):
-    prefix_string = "temp_preprocessed"
-    fname_processed_output = fpath_output / f"{prefix_string}_{fname_rawdata.name}"
-    kspace_dims = sirf_preprocessing.preprocess(str(fname_rawdata), str(fname_processed_output))
-
-    if kspace_dims:
-        return fname_processed_output, kspace_dims
-    else:
-        raise AssertionError("The preprocessing step failed. Aborting reconstructions.")
-
-def recon_complete_with_sirf(fname_raw, fprefix_out):
-
-    # acq_data = AcquisitionData(str(fname_raw))
-
-    acq_data = preprocess(str(fname_raw), "/media/sf_CCPPETMR/tmp.h5")
-    print(type(acq_data))
     # Pre-process this input data.
     # (Currently this is a Python script that just sets up a 3 chain gadget.
     # In the future it will be independent of the MR recon engine.)
-    print('---\n pre-processing acquisition data...')
-    preprocessed_data = preprocess_acquisition_data(acq_data)
+    preprocessed_data = pMR.preprocess_acquisition_data(mr_rawdata)
 
     # Perform reconstruction of the preprocessed data.
     # 1. set the reconstruction to be for Cartesian GRAPPA data.
@@ -72,7 +49,7 @@ def recon_complete_with_sirf(fname_raw, fprefix_out):
             # 'FloatToUShortGadget'
             ]
 
-    recon = Reconstructor(recon_gadgets)
+    recon = pMR.Reconstructor(recon_gadgets)
 
     recon.set_gadget_property("B2B", "N_dimension", "phase")
     recon.set_gadget_property("B2B", "S_dimension", "set")
@@ -92,7 +69,7 @@ def recon_complete_with_sirf(fname_raw, fprefix_out):
     image_data = image_data.abs()
     image_data.write(str(fprefix_out / "sirfrecon.dcm"))
 
-    return None
+    return True
 
 def recon(fname_rawdata, fname_config):
     cmd_recon = f"gadgetron_ismrmrd_client --filename={fname_rawdata} --outfile=' ' --config-local={fname_config}"
