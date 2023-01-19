@@ -55,34 +55,22 @@ jobs:
           DEVEL_BUILD: "OFF"
         - os: ubuntu-latest
           compiler: gcc
-          compiler_version: 9
+          compiler_version: 11
           BUILD_TYPE: "Release"
           EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON -DUSE_ROOT:BOOL=ON"
           DEVEL_BUILD: "ON"
-        # - os: ubuntu-latest
-        #   compiler: gcc
-        #   compiler_version: 8
-        #   BUILD_TYPE: "Release"
-        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-        #   DEVEL_BUILD: "OFF"
-        # - os: ubuntu-18.04
-        #   compiler: gcc
-        #   compiler_version: 8
-        #   BUILD_TYPE: "Release"
-        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-        #   DEVEL_BUILD: "OFF"
-        # - os: ubuntu-18.04
-        #   compiler: gcc
-        #   compiler_version: 8
-        #   BUILD_TYPE: "Release"
-        #   EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
-        #   DEVEL_BUILD: "ON"
+        - os: ubuntu-20.04
+          compiler: gcc
+          compiler_version: 8
+          BUILD_TYPE: "Release"
+          EXTRA_BUILD_FLAGS: "-DUSE_ITK=ON -DBUILD_CIL=ON -DUSE_SYSTEM_ACE=ON -DUSE_SYSTEM_Armadillo=OFF -DUSE_SYSTEM_Boost=ON -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DBUILD_siemens_to_ismrmrd=ON -DUSE_SYSTEM_SWIG=ON"
+          DEVEL_BUILD: "OFF"
 
       # let's run all of them, as opposed to aborting when one fails
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install_dependencies
       run: 
           cd docker;
@@ -95,9 +83,11 @@ jobs:
           sudo bash build_system-ubuntu.sh;
           PYTHON_EXECUTABLE=python3 PYTHON_INSTALL_DIR=~/virtualenv bash user_python-ubuntu.sh;
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.compiler_version }}-${{ matrix.BUILD_TYPE }}
+        max-size: "900M"
+
     - name: set_compiler_variables
       shell: bash
       run: |
@@ -140,6 +130,13 @@ jobs:
           cd ${GITHUB_WORKSPACE}/build;
           source ~/virtualenv/bin/activate;
           cmake --build . -j 1;
+
+    # Enable tmate debugging of manually-triggered workflows if the input option was provided
+    - name: Setup tmate session if triggered
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 15
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
     - name: Upload build log files for debugging
       uses: actions/upload-artifact@v3
       if: failure()
