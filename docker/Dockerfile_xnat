@@ -128,7 +128,7 @@ COPY user_sirf-ubuntu.sh .
 
 # SIRF-SuperBuild version
 ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
-ARG SIRF_SB_TAG="xnat-dcm-qfix"
+ARG SIRF_SB_TAG="xnat-sirf-dcm"
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
 ARG NUM_PARALLEL_BUILDS="20"
