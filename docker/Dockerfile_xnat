@@ -131,7 +131,7 @@ ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
 ARG SIRF_SB_TAG="xnat-sirf-dcm"
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
-ARG NUM_PARALLEL_BUILDS="20"
+ARG NUM_PARALLEL_BUILDS="12"
 
 ARG BUILD_FLAGS="\
  -DCMAKE_BUILD_TYPE=Release\
