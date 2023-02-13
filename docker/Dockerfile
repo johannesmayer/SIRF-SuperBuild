@@ -108,10 +108,10 @@ USER ${NB_USER}:${NB_GROUP}
 
 # Python (virtualenv or conda)
 COPY requirements.txt .
-COPY requirements_conda_forge.txt .
+COPY requirements.yml .
 COPY user_python-ubuntu.sh .
 RUN PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR} bash user_python-ubuntu.sh  && \
-    rm user_python-ubuntu.sh requirements.txt requirements_conda_forge.txt
+    rm user_python-ubuntu.sh requirements.txt requirements.yml
 
 
 # ccache
@@ -120,10 +120,12 @@ COPY devel/.ccache/ /opt/ccache/
 # give everyone write permisions
 RUN chmod -R go+w /opt/ccache
 
+
 # SIRF
 USER "${NB_USER}"
 
 RUN ccache -o cache_dir=/opt/ccache
+
 COPY user_sirf-ubuntu.sh .
 
 # SIRF-SuperBuild version
@@ -131,13 +133,13 @@ ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
 ARG SIRF_SB_TAG="xnat-sirf-dcm"
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
-ARG NUM_PARALLEL_BUILDS="12"
+ARG NUM_PARALLEL_BUILDS="16"
 
 ARG BUILD_FLAGS="\
  -DCMAKE_BUILD_TYPE=Release\
  -DSTIR_ENABLE_OPENMP=ON -DUSE_SYSTEM_ACE=ON\
  -DUSE_SYSTEM_Armadillo=ON -DUSE_SYSTEM_Boost=ON\
- -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=ON -DUSE_ITK=ON\
+ -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=OFF -DUSE_ITK=OFF\
  -DGadgetron_USE_CUDA=OFF\
  -DUSE_SYSTEM_SWIG=ON\
  -DUSE_NiftyPET=OFF\
@@ -166,9 +168,12 @@ ARG HOME="/home/${NB_USER}"
 USER "${NB_USER}"
 
 COPY requirements-service.txt .
+COPY requirements-service.yml .
+COPY requirements.yml .
 COPY user_service-ubuntu.sh .
-RUN bash user_service-ubuntu.sh
-RUN rm user_service-ubuntu.sh requirements-service.txt
+COPY install-sirf-exercises-dep.py .
+RUN PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} PYTHON_INSTALL_DIR=${PYTHON_INSTALL_DIR} bash user_service-ubuntu.sh
+RUN rm user_service-ubuntu.sh requirements-service.txt requirements-service.yml install-sirf-exercises-dep.py
 
 USER root
 COPY download_data.sh /usr/local/bin/
@@ -221,27 +226,10 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
 
 USER "${NB_USER}"
 
-# ENTRYPOINT ["/tini", "-g", "--"]
+ENTRYPOINT ["/tini", "-g", "--"]
 # TODO some stuff here
 #CMD ["/usr/local/bin/service-jupyterhub.sh"]
 
 # TODO set some env variables (or do it in a compose file)
 
 ENV DEBIAN_FRONTEND ''
-
-USER root
-
-COPY /xnat/requirements.txt .
-
-RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
-RUN python3 get-pip.py
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
-
-RUN mkdir -p /recon
-RUN chmod 777 /recon
-COPY /xnat/recon /recon
-
-USER "${NB_USER}"
-ENTRYPOINT /bin/bash
-
-LABEL org.nrg.commands="[{\"name\": \"sirf_qc\", \"description\": \"Runs mr_cine_recon\", \"label\": \"sirf_qc_v1\", \"version\": \"0.1\", \"schema-version\": \"1.0\", \"type\": \"docker\", \"image\": \"johannesmayer/sirf_qc\", \"command-line\": \"/bin/bash -c 'gadgetron & python3 /recon/mr_cine_recon.py /input /output'\", \"mounts\": [{\"name\": \"raw-in\", \"writable\": false, \"path\": \"/input\"}, {\"name\": \"dcm-out\", \"writable\": true, \"path\": \"/output\"}], \"environment-variables\": {}, \"ports\": {}, \"inputs\": [{\"name\": \"other-options\", \"label\": null, \"description\": \"Other command-line flags to pass to qc_dicom_nii\", \"type\": \"string\", \"matcher\": null, \"default-value\": null, \"required\": false, \"replacement-key\": \"[OTHER_OPTIONS]\", \"sensitive\": null, \"command-line-flag\": null, \"command-line-separator\": null, \"true-value\": null, \"false-value\": null, \"select-values\": [], \"multiple-delimiter\": null}], \"outputs\": [{\"name\": \"dicom\", \"description\": \"Reconstructed dcm files\", \"required\": true, \"mount\": \"dcm-out\", \"path\": null, \"glob\": null}], \"xnat\": [{\"name\": \"sirf_qc\", \"label\": \"sirf_qc_mr\", \"description\": \"Run QC on MR raw data\", \"contexts\": [\"xnat:imageScanData\"], \"external-inputs\": [{\"name\": \"scan\", \"label\": null, \"description\": \"Input scan\", \"type\": \"Scan\", \"matcher\": \"'MR_RAW' in @.resources[*].label\", \"default-value\": null, \"required\": true, \"replacement-key\": null, \"sensitive\": null, \"provides-value-for-command-input\": null, \"provides-files-for-command-mount\": null, \"via-setup-command\": null, \"user-settable\": null, \"load-children\": true}], \"derived-inputs\": [{\"name\": \"scan-raw\", \"label\": null, \"description\": \"The raw resource on the scan\", \"type\": \"Resource\", \"matcher\": \"@.label == 'MR_RAW'\", \"default-value\": null, \"required\": true, \"replacement-key\": null, \"sensitive\": null, \"provides-value-for-command-input\": null, \"provides-files-for-command-mount\": \"raw-in\", \"user-settable\": null, \"load-children\": true, \"derived-from-wrapper-input\": \"scan\", \"derived-from-xnat-object-property\": null, \"via-setup-command\": null, \"multiple\": false, \"parser\": null}], \"output-handlers\": [{\"name\": \"dcm-resource\", \"accepts-command-output\": \"dicom\", \"via-wrapup-command\": null, \"as-a-child-of\": \"scan\", \"type\": \"Resource\", \"label\": \"DICOM\", \"format\": null, \"description\": null, \"content\": null, \"tags\": []}]}, {\"name\": \"sirf_qc_resource\", \"label\": \"sirf_qc_mr_resource\", \"description\": \"Run QC on MR raw data resource\", \"contexts\": [\"xnat:resourceCatalog\"], \"external-inputs\": [{\"name\": \"scan-raw\", \"label\": null, \"description\": \"The raw resource on the scan\", \"type\": \"Resource\", \"matcher\": \"@.label == 'MR_RAW'\", \"default-value\": null, \"required\": true, \"replacement-key\": null, \"sensitive\": null, \"provides-value-for-command-input\": null, \"provides-files-for-command-mount\": \"raw-in\", \"via-setup-command\": null, \"user-settable\": null, \"load-children\": true}], \"derived-inputs\": [{\"name\": \"scan\", \"label\": null, \"description\": \"Input scan\", \"type\": \"Scan\", \"matcher\": null, \"default-value\": null, \"required\": true, \"replacement-key\": null, \"sensitive\": null, \"provides-value-for-command-input\": null, \"provides-files-for-command-mount\": null, \"user-settable\": null, \"load-children\": true, \"derived-from-wrapper-input\": \"scan-raw\", \"derived-from-xnat-object-property\": null, \"via-setup-command\": null, \"multiple\": false, \"parser\": null}], \"output-handlers\": [{\"name\": \"dcm-resource\", \"accepts-command-output\": \"dicom\", \"via-wrapup-command\": null, \"as-a-child-of\": \"scan\", \"type\": \"Resource\", \"label\": \"DICOM\", \"format\": null, \"description\": null, \"content\": null, \"tags\": []}]}], \"container-labels\": {}, \"generic-resources\": {}, \"ulimits\": {}}]"
