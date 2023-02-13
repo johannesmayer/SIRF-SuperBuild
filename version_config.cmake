@@ -229,13 +229,11 @@ if (DEVEL_BUILD)
   # CCPi CIL
   set(DEFAULT_CIL_URL https://github.com/TomographicImaging/CIL.git)
   set(DEFAULT_CIL_TAG origin/master )
-  
 
 else()
   set(DEFAULT_SIRF_TAG origin/oh-recon)
 
-  # set(DEFAULT_SIRF_TAG v3.3.0)
-  # set (DEFAULT_SIRF_TAG 2ed708bb8c8dc4ac6e1b081a1f9800754621b5fd)
+  # set(DEFAULT_SIRF_TAG v3.4.0)
 
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
