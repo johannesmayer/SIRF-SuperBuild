@@ -1,0 +1,5 @@
+nibabel
+pydicom
+deprecation
+nose
+ismrmrd
