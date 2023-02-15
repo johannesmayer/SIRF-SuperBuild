@@ -4,7 +4,7 @@ import sirf.Gadgetron as pMR
 
 def preprocess(fname_in):
 
-    rd = pMR.AcquisitionData(fname_in)
+    rd = pMR.AcquisitionData(fname_in, all_=True)
 
     rd_preprocessed = rd.new_acquisition_data()
     slices = np.unique(rd.get_ISMRMRD_info('slice'))
@@ -96,7 +96,7 @@ def get_phasencoding_for_phase(rawdata, phase_number):
 
 def get_encoding_subset(rawdata, encoding_dimension, dim_number):
 
-    acquisition_dim = rawdata.get_ISMRMRD_info(encoding_dimension)
+    acquisition_dim = rawdata.get_ISMRMRD_info(encoding_dimension, which=range(0,rawdata.number()))
     idx_all = np.arange(rawdata.number())
     idx_phase_number = idx_all[acquisition_dim == dim_number]
 
