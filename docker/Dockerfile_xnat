@@ -131,7 +131,7 @@ COPY user_sirf-ubuntu.sh .
 
 # SIRF-SuperBuild version
 ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
-ARG SIRF_SB_TAG="oh-recon"
+ARG SIRF_SB_TAG="oh-with-gtmaster"
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
 ARG NUM_PARALLEL_BUILDS="16"
@@ -235,7 +235,6 @@ ENTRYPOINT ["/tini", "-g", "--"]
 
 ENV DEBIAN_FRONTEND ''
 
-RUN echo "AGAIN"
 USER root
 
 COPY /xnat/requirements.txt .
