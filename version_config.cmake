@@ -29,8 +29,10 @@ if (APPLE) # really should be checking for CLang
     set(Boost_URL http://downloads.sourceforge.net/project/boost/boost/${Boost_VERSION}/boost_1_68_0.zip)
     set(Boost_MD5 f4096c4583947b0eb103c8539f1623a3)
 else()
+     # Use version 1.78.0 version
      set(Boost_VERSION 1.78.0)
      if (BUILD_GADGETRON)
+     # https://github.com/gadgetron/gadgetron/blob/12ffc43debb9bad2e170713006d29dea78d966bf/CMakeLists.txt#L205-L209
        set(Boost_REQUIRED_VERSION 1.71.0)
      else()
        # Ubutnu 16.04 version should be fine
@@ -113,7 +115,7 @@ set(NIFTYREG_REQUIRED_VERSION 1.5.68)
 
 ## ISMRMRD
 set(DEFAULT_ISMRMRD_URL https://github.com/ismrmrd/ismrmrd )
-set(DEFAULT_ISMRMRD_TAG v1.7.0)
+set(DEFAULT_ISMRMRD_TAG origin/master)
 #if (WIN32)
 #  set(DEFAULT_ISMRMRD_URL https://github.com/SyneRBI/ismrmrd )
 #  set(DEFAULT_ISMRMRD_TAG program_options_fix)
@@ -124,7 +126,7 @@ set(DEFAULT_ISMRMRD_TAG v1.7.0)
 
 ## Gadgetron
 set(DEFAULT_Gadgetron_URL https://github.com/gadgetron/gadgetron )
-set(DEFAULT_Gadgetron_TAG b6191eaaa72ccca6c6a5fe4c0fa3319694f512ab)
+set(DEFAULT_Gadgetron_TAG master)
 
 ## ASTRA
 set(DEFAULT_astra-toolbox_URL https://github.com/astra-toolbox/astra-toolbox )
@@ -173,6 +175,24 @@ set(DEFAULT_ROOT_TAG "v6-26-10")
 set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
 set(DEFAULT_ACE_TAG v6.5.9)
 
+# range-v3
+set(DEFAULT_range-v3_URL https://github.com/ericniebler/range-v3.git )
+set(DEFAULT_range-v3_TAG 0.12.0)
+
+set(DEFAULT_RocksDB_URL https://github.com/facebook/rocksdb.git )
+set(DEFAULT_RocksDB_TAG v6.26.0)
+
+set(DEFAULT_mrd-storage-server_URL https://github.com/ismrmrd/mrd-storage-server.git)
+set(DEFAULT_mrd-storage-server_TAG origin/main)
+
+set(DEFAULT_Date_URL https://github.com/HowardHinnant/date.git )
+set(DEFAULT_Date_TAG master)
+
+# works only for Linux
+set(Go_URL https://go.dev/dl/go1.19.3.linux-amd64.tar.gz)
+set(Go_SHA256 74b9640724fd4e6bb0ed2a1bc44ae813a03f1e72a4c76253e2d5c015494430ba)
+
+
 option (DEVEL_BUILD "Developer Build" OFF)
 mark_as_advanced(DEVEL_BUILD)
 
@@ -202,6 +222,9 @@ if (DEVEL_BUILD)
   set(DEFAULT_pet_rd_tools_URL https://github.com/UCL/pet-rd-tools )
   set(DEFAULT_pet_rd_tools_TAG origin/master)
 
+  set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
+  set(DEFAULT_ACE_TAG origin/ACE_version_6.5.9)
+
   # CCPi CIL
   set(DEFAULT_CIL_URL https://github.com/TomographicImaging/CIL.git)
   set(DEFAULT_CIL_TAG origin/master )
@@ -215,7 +238,8 @@ else()
   set(DEFAULT_STIR_TAG rel_5.1.0)
 
   # ismrmrd
-  set(DEFAULT_ISMRMRD_TAG v1.7.0)
+  set(DEFAULT_ISMRMRD_TAG master)
+
   ## siemens_to_ismrmrd
   set(DEFAULT_siemens_to_ismrmrd_URL https://github.com/ismrmrd/siemens_to_ismrmrd)
   set(DEFAULT_siemens_to_ismrmrd_TAG b87759e49e53dab4939147eb52b7a0e6465f3d04)
@@ -224,6 +248,13 @@ else()
   set(DEFAULT_pet_rd_tools_URL https://github.com/UCL/pet-rd-tools )
   set(DEFAULT_pet_rd_tools_TAG v2.0.1)
 
+  # ACE
+  set(DEFAULT_ACE_URL https://github.com/paskino/libace-conda)
+  set(DEFAULT_ACE_TAG origin/master)
+  
+  # range-v3
+  set(DEFAULT_range-v3_TAG origin/master)
+  
 endif()
 
 
@@ -296,6 +327,18 @@ set(SPM_TAG ${DEFAULT_SPM_TAG} CACHE STRING ON)
 set(JSON_URL ${DEFAULT_JSON_URL} CACHE STRING ON)
 set(JSON_TAG ${DEFAULT_JSON_TAG} CACHE STRING ON)
 
+set(range-v3_URL ${DEFAULT_range-v3_URL} CACHE STRING ON)
+set(range-v3_TAG ${DEFAULT_range-v3_TAG} CACHE STRING ON)
+
+set(RocksDB_URL ${DEFAULT_RocksDB_URL} CACHE STRING ON)
+set(RocksDB_TAG ${DEFAULT_RocksDB_TAG} CACHE STRING ON)
+
+set(mrd-storage-server_URL ${DEFAULT_mrd-storage-server_URL} CACHE STRING ON)
+set(mrd-storage-server_TAG ${DEFAULT_mrd-storage-server_TAG} CACHE STRING ON)
+
+set(Date_URL ${DEFAULT_Date_URL} CACHE STRING ON)
+set(Date_TAG ${DEFAULT_Date_TAG} CACHE STRING ON)
+
 mark_as_advanced(SIRF_URL SIRF_TAG STIR_URL STIR_TAG
   Gadgetron_URL Gadgetron_TAG
   siemens_to_ismrmrd_URL siemens_to_ismrmrd_TAG
@@ -311,9 +354,12 @@ mark_as_advanced(SIRF_URL SIRF_TAG STIR_URL STIR_TAG
   ITK_URL ITK_TAG
   SPM_URL SPM_TAG
   JSON_URL JSON_TAG
+  range-v3_URL range-v3_TAG
   ROOT_URL ROOT_TAG
   astra-toolbox_URL astra-toolbox_TAG
   astra-python-wrapper_URL astra-python-wrapper_TAG
   ACE_URL ACE_TAG
-  
+  RocksDB_URL RocksDB_TAG
+  mrd-storage-server_URL mrd-storage-server_TAG
+  Date_URL Date_TAG
 )
