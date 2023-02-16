@@ -1,5 +1,8 @@
 # ChangeLog
 ## v3.4.0
+- Build Gadgetron master. Requires new packages libdcmtk-dev libpugixml-dev libgflags-dev. Added SuperBuild project dependency: range-v3;JSON;RocksDB
+- moved the VM repository to the `VirtualBox` subdirectory
+- fix usage of `proj_EXTRA_CMAKE_ARGS` facility (it was broken for all projects except ITK) [#616](https://github.com/SyneRBI/SIRF-SuperBuild/issues/616)
 - Removed CIL-ASTRA as it has been merged into CIL code base.
 - docker images updates
   - Ubuntu: 22.04
@@ -17,6 +20,20 @@
   - use environment variables in Vagrantfile for easier building
 - updated versions:
   - SIRF: v3.4.0
+- Added python-opencv to docker requirements.txt
+  - added requirements.yml and requirements-service.yml to handle dependencies for conda python
+  - updates to use mamba
+- docker images updates
+  - Ubuntu: 22.04
+  - use requirements.yml for conda python
+- updated versions:
+  - SIRF: f40e9d8cf1166eb001a7782a4082f94f67d9a8f4
+  - Gadgetron: master
+  - RocksDB: 6.26.0
+  - JSON: 3.10.4
+  - range-v3: 0.11.0
+  - ACE : ACE_version_6.5.9 
+  - siemens_to_ismrmrd: 8bb8b08f53ce73c2de9ba5f47f1532f96292d92b
   - CIL: a6062410028c9872c5b355be40b96ed1497fed2a > 22.1.0
   - GTest: 1.12.1
   - glog: 0.6.0
@@ -56,7 +73,7 @@
 - add CITATION.cff (and remove .zenodo.json)
 - added numba as dependency in docker files
 - updated versions:
-  - SIRF: 3.3.0
+  - SIRF: f40e9d8cf1166eb001a7782a4082f94f67d9a8f4
   - STIR: 5.0.2
   - parallelproj: v0.8
   - CCPi Regularisation: v21.0.0
