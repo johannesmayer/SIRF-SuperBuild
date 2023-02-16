@@ -1,6 +1,9 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE} as base
 
+ENV http_proxy "http://webproxy.berlin.ptb.de:8080"
+ENV https_proxy "http://webproxy.berlin.ptb.de:8080"
+
 LABEL \
   author.name="Casper da Costa-Luis, Kris Thielemans, Edoardo Pasca"                 \
   author.email=imaging@caspersci.uk.to        \
