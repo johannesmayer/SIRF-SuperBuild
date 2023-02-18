@@ -1,6 +1,9 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE} as base
 
+ENV http_proxy "http://webproxy.berlin.ptb.de:8080"
+ENV https_proxy "http://webproxy.berlin.ptb.de:8080"
+
 LABEL \
   author.name="Casper da Costa-Luis, Kris Thielemans, Edoardo Pasca"                 \
   author.email=imaging@caspersci.uk.to        \
@@ -126,8 +129,8 @@ RUN ccache -o cache_dir=/opt/ccache
 COPY user_sirf-ubuntu.sh .
 
 # SIRF-SuperBuild version
-ARG SIRF_SB_URL="https://github.com/SyneRBI/SIRF-SuperBuild"
-ARG SIRF_SB_TAG="master"
+ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
+ARG SIRF_SB_TAG="try-to-build-GT"
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
 ARG NUM_PARALLEL_BUILDS="2"
@@ -136,7 +139,7 @@ ARG BUILD_FLAGS="\
  -DCMAKE_BUILD_TYPE=Release\
  -DSTIR_ENABLE_OPENMP=ON -DUSE_SYSTEM_ACE=ON\
  -DUSE_SYSTEM_Armadillo=ON -DUSE_SYSTEM_Boost=ON\
- -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=OFF -DUSE_ITK=ON\
+ -DUSE_SYSTEM_FFTW3=ON -DUSE_SYSTEM_HDF5=OFF -DUSE_ITK=OFF\
  -DGadgetron_USE_CUDA=OFF\
  -DUSE_SYSTEM_SWIG=ON\
  -DUSE_NiftyPET=OFF\
