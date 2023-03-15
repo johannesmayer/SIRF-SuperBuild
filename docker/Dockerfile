@@ -129,8 +129,8 @@ RUN ccache -o cache_dir=/opt/ccache
 COPY user_sirf-ubuntu.sh .
 
 # SIRF-SuperBuild version
-ARG SIRF_SB_URL="https://github.com/SyneRBI/SIRF-SuperBuild"
-ARG SIRF_SB_TAG="master"
+ARG SIRF_SB_URL="https://github.com/johannesmayer/SIRF-SuperBuild"
+ARG SIRF_SB_TAG="test-new-gt"
 
 # set if we want to remove the build files
 ARG REMOVE_BUILD_FILES=1
@@ -263,4 +263,8 @@ RUN echo "conda activate base" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
 
 # ENTRYPOINT ["/tmp/execution.sh"]
+
+ENV http_proxy ""
+ENV https_proxy ""
+
 ENTRYPOINT ["/bin/bash"]
