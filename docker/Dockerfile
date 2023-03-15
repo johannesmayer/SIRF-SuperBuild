@@ -139,7 +139,7 @@ ARG RUN_CTEST=0
 
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
-ARG NUM_PARALLEL_BUILDS="8"
+ARG NUM_PARALLEL_BUILDS="12"
 
 ARG BUILD_FLAGS="\
  -DCMAKE_BUILD_TYPE=Release\
@@ -255,11 +255,12 @@ COPY /xnat/execution.sh /tmp/execution.sh
 RUN chmod +x /tmp/execution.sh
 
 USER "${NB_USER}"
-# ENTRYPOINT ["/opt/conda/bin/python", "/recon/mr_cine_recon.py", "/input", "/output"]
-# ENTRYPOINT ["/bin/bash", "-c", "\"source /home/jovyan/.bashrc && python /recon/mr_cine_recon.py /input /output \""]
 
 RUN echo "conda activate base" >> ~/.bashrc
 SHELL ["/bin/bash", "--login", "-c"]
+
+ENV http_proxy ""
+ENV https_proxy ""
 
 ENTRYPOINT ["/tmp/execution.sh"]
 
