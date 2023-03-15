@@ -6,7 +6,7 @@
     "schema-version": "1.0",
     "type": "docker",
     "image": "johannesmayer/sirf_qc",
-    "command-line": "/bin/bash -c 'gadgetron & python3 /recon/mr_cine_recon.py /input /output'",
+    "command-line": "",
     "mounts": [
       {
         "name": "raw-in",
