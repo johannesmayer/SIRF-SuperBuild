@@ -224,7 +224,7 @@ if (DEVEL_BUILD)
   
 
 else()
-  set(DEFAULT_SIRF_TAG v3.4.0)
+  set(DEFAULT_SIRF_TAG origin/master)
   
   ## STIR
   set(DEFAULT_STIR_URL https://github.com/UCL/STIR )
