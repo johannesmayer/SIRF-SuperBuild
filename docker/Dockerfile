@@ -1,6 +1,9 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE} as base
 
+ENV http_proxy "http://webproxy.berlin.ptb.de:8080"
+ENV https_proxy "http://webproxy.berlin.ptb.de:8080"
+
 LABEL \
   author.name="Casper da Costa-Luis, Kris Thielemans, Edoardo Pasca"                 \
   author.email=imaging@caspersci.uk.to        \
@@ -132,11 +135,11 @@ ARG SIRF_SB_TAG="master"
 # set if we want to remove the build files
 ARG REMOVE_BUILD_FILES=1
 # set if we want to run the tests during build
-ARG RUN_CTEST=1
+ARG RUN_CTEST=0
 
 # speeding up the cmake build
 # (implementation note: changing this in your environment will invalidate the docker cache sadly)
-ARG NUM_PARALLEL_BUILDS="2"
+ARG NUM_PARALLEL_BUILDS="8"
 
 ARG BUILD_FLAGS="\
  -DCMAKE_BUILD_TYPE=Release\
@@ -229,10 +232,35 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
 
 USER "${NB_USER}"
 
-ENTRYPOINT ["/tini", "-g", "--"]
+# ENTRYPOINT ["/tini", "-g", "--"]
 # TODO some stuff here
 #CMD ["/usr/local/bin/service-jupyterhub.sh"]
 
 # TODO set some env variables (or do it in a compose file)
 
-ENV DEBIAN_FRONTEND ''
+# ENV DEBIAN_FRONTEND ''
+
+USER root
+
+# COPY /xnat/requirements.txt .
+
+# RUN curl https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py
+# RUN python3 get-pip.py
+# RUN python3 -m pip install --no-cache-dir -r requirements.txt
+
+# RUN mkdir -p /recon
+# RUN chmod 777 /recon
+# COPY /xnat/recon /recon
+
+# COPY /xnat/execution.sh /tmp/execution.sh
+# RUN chmod +x /tmp/execution.sh
+
+USER "${NB_USER}"
+# ENTRYPOINT ["/opt/conda/bin/python", "/recon/mr_cine_recon.py", "/input", "/output"]
+# ENTRYPOINT ["/bin/bash", "-c", "\"source /home/jovyan/.bashrc && python /recon/mr_cine_recon.py /input /output \""]
+
+RUN echo "conda activate base" >> ~/.bashrc
+SHELL ["/bin/bash", "--login", "-c"]
+
+# ENTRYPOINT ["/tmp/execution.sh"]
+ENTRYPOINT ["/bin/bash"]
