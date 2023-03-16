@@ -22,9 +22,9 @@ def main_cine_recon(fpath_in, fpath_output_prefix):
         mr_data = preprocess.equally_fill_cardiac_phases(str(fname_raw))
         success *= sirf_cine_recon(mr_data, fpath_output_prefix)
 
-    prefix_attribute_files = "_­attrib.­xml"
-    list_attribute_files = sorted(fpath_in.glob(f"*{prefix_attribute_files}"))
-    [attrib_file.unlink() for attrib_file in list_attribute_files]
+    list_attribute_files = sorted(fpath_output_prefix.glob( "*_attrib.xml"))
+    print(f"We remain with {len(list_attribute_files)} to delete.")
+    [os.remove(attrib_file) for attrib_file in list_attribute_files]
 
     print(f'Reconstruction finished successful? {success}')
 
