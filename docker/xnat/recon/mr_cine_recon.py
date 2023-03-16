@@ -8,18 +8,14 @@ import sirf.Gadgetron as pMR
 import sys
 from pathlib import Path
 
-### looped reconstruction over files in input path
-path_in  = Path(sys.argv[1])
-path_out = Path(sys.argv[2])
 
+def main_cine_recon(fpath_in, fpath_output_prefix):
 
-def main_cine_recon(path_in, fpath_output_prefix):
-
-    print(f"Reading from {path_in}, writing into {fpath_output_prefix}")
-    assert os.access(path_in, os.R_OK), f"You don't have write permission in {path_in}"
+    print(f"Reading from {fpath_in}, writing into {fpath_output_prefix}")
+    assert os.access(fpath_in, os.R_OK), f"You don't have read permission in {fpath_in}"
     assert os.access(fpath_output_prefix, os.W_OK), f"You don't have write permission in {fpath_output_prefix}"
 
-    list_rawdata = sorted(path_in.glob("*.h5"))
+    list_rawdata = sorted(fpath_in.glob("*.h5"))
     success = True
 
     for fname_raw in list_rawdata:
@@ -67,6 +63,10 @@ def sirf_cine_recon(mr_rawdata: pMR.AcquisitionData, fprefix_out: Path):
 
     return True
 
+
+### looped reconstruction over files in input path
+path_in  = Path(sys.argv[1])
+path_out = Path(sys.argv[2])
 
 if __name__ == "__main__":
     success = main_cine_recon(path_in, path_out)
