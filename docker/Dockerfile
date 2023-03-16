@@ -263,9 +263,9 @@ ENV SIRF_INSTALL_PATH "/opt/SIRF-SuperBuild/INSTALL"
 ENV SIRF_PATH "/opt/SIRF-SuperBuild/sources/SIRF"
 RUN echo $PATH
 
-RUN echo "conda activate base" >> ~/.bashrc
-# SHELL ["/bin/bash", "--login", "-c"]
-SHELL ["/bin/bash", "-c"]
+# RUN echo "conda activate base" >> ~/.bashrc
+SHELL ["/bin/bash", "--login", "-c"]
+# SHELL ["/bin/bash", "-c"]
 
 ENV http_proxy ""
 ENV https_proxy ""
