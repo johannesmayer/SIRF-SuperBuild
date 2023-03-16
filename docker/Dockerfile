@@ -254,10 +254,18 @@ COPY /xnat/recon /recon
 COPY /xnat/execution.sh /tmp/execution.sh
 RUN chmod +x /tmp/execution.sh
 
-USER "${NB_USER}"
+# USER "${NB_USER}"
+
+ENV PATH "/opt/conda/bin:/opt/SIRF-SuperBuild/INSTALL/bin:$PATH"
+ENV LD_LIBRARY_PATH "/opt/SIRF-SuperBuild/INSTALL/lib:/opt/SIRF-SuperBuild/INSTALL/lib64:/opt/conda/lib/:$LD_LIBRARY_PATH"
+ENV PYTHONPATH "/opt/SIRF-SuperBuild/INSTALL/python"
+ENV SIRF_INSTALL_PATH "/opt/SIRF-SuperBuild/INSTALL"
+ENV SIRF_PATH "/opt/SIRF-SuperBuild/sources/SIRF"
+RUN echo $PATH
 
 RUN echo "conda activate base" >> ~/.bashrc
-SHELL ["/bin/bash", "--login", "-c"]
+# SHELL ["/bin/bash", "--login", "-c"]
+SHELL ["/bin/bash", "-c"]
 
 ENV http_proxy ""
 ENV https_proxy ""
